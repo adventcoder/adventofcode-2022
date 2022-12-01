@@ -1,14 +1,15 @@
 
 #include <stdlib.h>
-#include <stdbool.h>
 #include <stdio.h>
 
+#define INPUT_NAME "inputs/day1.txt"
 #define LINE_SIZE 100
+#define NUM_TOTALS 3
 
-static bool next_total(FILE *input, int *total) {
+static int next_total(FILE *input, int *total) {
     int count = 0;
     *total = 0;
-    while (true) {
+    for (;;) {
         static char line[LINE_SIZE];
         if (!fgets(line, LINE_SIZE, input))
             break;
@@ -21,35 +22,37 @@ static bool next_total(FILE *input, int *total) {
     return count;
 }
 
-static void insert(int *totals, int size, int new_total) {
-    if (new_total > totals[0]) {
-        totals[0] = new_total;
-        for (int i = 1; i < size; i++) {
-            if (new_total > totals[i]) {
-                totals[i - 1] = totals[i];
-                totals[i] = new_total;
-            }
-        }
+static void insert(int *totals, int new_total) {
+    int i = 0;
+    while (i < NUM_TOTALS && new_total > totals[i]) {
+        if (i > 0)
+            totals[i - 1] = totals[i];
+        i++;
     }
+    if (i > 0)
+        totals[i - 1] = new_total;
 }
 
 int main(void) {
-    FILE *input = fopen("inputs/day1.txt", "r");
+    FILE *input = fopen(INPUT_NAME, "r");
     if (!input) {
-        fprintf(stderr, "input not found\n");
+        fprintf(stderr, "Unable to open file %s for reading", INPUT_NAME);
         return EXIT_FAILURE;
     }
 
-    int top_totals[] = { 0, 0, 0 };
+    int top_totals[NUM_TOTALS] = { 0 };
     int total;
     while (next_total(input, &total))
-        insert(top_totals, 3, total);
+        insert(top_totals, total);
+
+    fclose(input);
+
+    printf("silver: %d\n", top_totals[NUM_TOTALS - 1]);
 
     int tippy_top_total = 0;
-    for (int i = 0; i < 3; i++)
+    for (int i = 0; i < NUM_TOTALS; i++)
         tippy_top_total += top_totals[i];
 
-    printf("silver: %d\n", top_totals[2]);
     printf("gold: %d\n", tippy_top_total);
 
     return EXIT_SUCCESS;
