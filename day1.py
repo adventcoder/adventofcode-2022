@@ -1,18 +1,13 @@
 
-import sys
+from utils import *
 
 def main():
-    totals = read_totals('inputs/day1.txt')
-    totals.sort()
-    print('silver:', totals[-1])
-    print('gold:', sum(totals[-3 : ]))
+    totals = sorted(map(parse_total, read_chunks('inputs/day1.txt')))
+    print('Silver:', totals[-1])
+    print('Gold:', sum(totals[-3 : ]))
 
-def read_totals(path):
-    return [sum(map(int, chunk.split('\n'))) for chunk in read(path).rstrip().split('\n\n')]
-
-def read(path):
-    with open(path) as file:
-        return file.read()
+def parse_total(chunk):
+    return sum(parse_list(chunk, int))
 
 if __name__ == '__main__':
     main()

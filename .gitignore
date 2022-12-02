@@ -1,2 +1,3 @@
-inputs/
+inputs
+__pycache__
 *.exe

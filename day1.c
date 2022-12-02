@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#define INPUT_NAME "inputs/day1.txt"
 #define LINE_SIZE 100
 #define NUM_TOTALS 3
 
@@ -34,9 +33,9 @@ static void insert(int *totals, int new_total) {
 }
 
 int main(void) {
-    FILE *input = fopen(INPUT_NAME, "r");
+    FILE *input = fopen("inputs/day1.txt", "r");
     if (!input) {
-        fprintf(stderr, "Unable to open file %s for reading", INPUT_NAME);
+        fprintf(stderr, "Input not found!\n");
         return EXIT_FAILURE;
     }
 
@@ -45,15 +44,13 @@ int main(void) {
     while (next_total(input, &total))
         insert(top_totals, total);
 
-    fclose(input);
-
-    printf("silver: %d\n", top_totals[NUM_TOTALS - 1]);
+    printf("Silver: %d\n", top_totals[NUM_TOTALS - 1]);
 
     int tippy_top_total = 0;
     for (int i = 0; i < NUM_TOTALS; i++)
         tippy_top_total += top_totals[i];
 
-    printf("gold: %d\n", tippy_top_total);
+    printf("Gold: %d\n", tippy_top_total);
 
     return EXIT_SUCCESS;
 }
