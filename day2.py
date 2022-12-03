@@ -1,16 +1,10 @@
 
-from utils import *
+from utils import read_table
 
 def main():
-    total1 = 0
-    total2 = 0
-    for a, b in read_table('inputs/day2.txt'):
-        i = 'ABC'.index(a)
-        j = 'XYZ'.index(b)
-        total1 += score(i, j, (j - i + 1) % 3)
-        total2 += score(i, (j + i - 1) % 3, j)
-    print('Silver:', total1)
-    print('Gold:', total2)
+    table = read_table('inputs/day2.txt', ('ABC'.index, 'XYZ'.index))
+    print('Silver:', sum(score(i, j, (j - i + 1) % 3) for i, j in table))
+    print('Gold:', sum(score(i, (j + i - 1) % 3, j) for i, j in table))
 
 def score(shape1, shape2, outcome):
     return shape2 + 1 + outcome * 3

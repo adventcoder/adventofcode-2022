@@ -1,5 +1,5 @@
 
-from utils import *
+from utils import read_chunks, parse_list
 
 def main():
     totals = sorted(map(parse_total, read_chunks('inputs/day1.txt')))
