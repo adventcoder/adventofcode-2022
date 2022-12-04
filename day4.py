@@ -4,18 +4,18 @@ from dataclasses import dataclass
 
 @dataclass
 class Interval:
-  min: int
-  max: int
+    min: int
+    max: int
 
-  @classmethod
-  def parse(cls, s):
-    return cls(*map(int, s.split('-')))
+    @classmethod
+    def parse(cls, s):
+        return cls(*map(int, s.split('-')))
 
-  def overlaps_all(self, other):
-    return self.min <= other.min and self.max >= other.max
+    def overlaps_all(self, other):
+        return self.min <= other.min and self.max >= other.max
 
-  def overlaps_any(self, other):
-    return self.min <= other.max and self.max >= other.min
+    def overlaps_any(self, other):
+        return self.min <= other.max and self.max >= other.min
 
 def main():
     pairs = read_table('inputs/day4.txt', [Interval.parse] * 2, separator = ',')
