@@ -1,13 +1,14 @@
 
-from utils import read_chunks, parse_list
+import framework
+from utils import parse_list
 
-def main():
-    totals = sorted(map(parse_total, read_chunks('inputs/day1.txt')))
-    print('Silver:', totals[-1])
-    print('Gold:', sum(totals[-3 : ]))
+def solve(input):
+    totals = sorted(parse_totals(input))
+    yield totals[-1]
+    yield sum(totals[-3 : ])
 
-def parse_total(chunk):
-    return sum(parse_list(chunk, int))
+def parse_totals(input):
+    return [sum(parse_list(chunk, int)) for chunk in input.split('\n\n')]
 
 if __name__ == '__main__':
-    main()
+    framework.main()

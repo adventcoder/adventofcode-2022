@@ -1,15 +1,16 @@
 
-from utils import read_list
+import framework
+from utils import parse_list
 from functools import reduce
 
-def main():
-    bags = read_list('inputs/day3.txt')
-    print('Silver:', sum(priority(badge(compartments(bag))) for bag in bags))
-    print('Gold:', sum(priority(badge(group)) for group in groups(bags)))
+def solve(input):
+    bags = parse_list(input)
+    yield sum(priority(badge(compartments(bag))) for bag in bags)
+    yield sum(priority(badge(group)) for group in groups(bags))
 
 def compartments(bag):
     i = len(bag) // 2
-    return bag[0 : i], bag[i : ]
+    return bag[ : i], bag[i : ]
 
 def groups(bags):
     return (bags[i : i + 3] for i in range(0, len(bags), 3))
@@ -22,7 +23,7 @@ def priority(item):
         return ord(item) - ord('a') + 1
     if 'A' <= item <= 'Z':
         return ord(item) - ord('A') + 27
-    raise(ValueError('invalid item: {}'.format(item)))
+    raise ValueError('invalid item: {}'.format(item))
 
 if __name__ == '__main__':
-    main()
+    framework.main()
