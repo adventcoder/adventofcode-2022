@@ -8,10 +8,17 @@ def solve(input):
     yield top(apply(stacks, instructions, move1))
     yield top(apply(stacks, instructions, move2))
 
-def apply(stacks, instructions, move):
+def apply(stacks, instructions, move, debug = False):
     result = [stack.copy() for stack in stacks]
+    if debug:
+        print_stacks(result)
     for n, i, j in instructions:
         move(result, n, i, j)
+        if debug:
+            import os, time
+            time.sleep(0.1)
+            os.system('cls')
+            print_stacks(result)
     return result
 
 def move1(stacks, n, i, j):
@@ -41,6 +48,12 @@ def parse_stacks(chunk):
         assert i + 1 == n
         stack.reverse()
     return stacks
+
+def print_stacks(stacks):
+    height = max(len(stack) for stack in stacks)
+    for i in reversed(range(height)):
+        print(' '.join('[' + stack[i] + ']' if i < len(stack) else '   ' for stack in stacks))
+    print(' '.join(str(i + 1).center(3) for i in range(len(stacks))))
 
 def parse_instruction(line):
     return [int(token) for token in line.split() if token.isdigit()]
