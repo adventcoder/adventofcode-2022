@@ -4,34 +4,26 @@ import framework
 def solve(input):
     chunks = input.split('\n\n')
     stacks = parse_stacks(chunks[0])
-    instructions = list(map(parse_instruction, chunks[1].splitlines()))
-    yield top(apply(stacks, instructions, move1))
-    yield top(apply(stacks, instructions, move2))
-
-def apply(stacks, instructions, move, debug = False):
-    result = [stack.copy() for stack in stacks]
-    if debug:
-        print_stacks(result)
-    for n, i, j in instructions:
-        move(result, n, i, j)
-        if debug:
-            import os, time
-            time.sleep(0.1)
-            os.system('cls')
-            print_stacks(result)
-    return result
-
-def move1(stacks, n, i, j):
-    for _ in range(n):
-        stacks[j - 1].append(stacks[i - 1].pop())
-
-def move2(stacks, n, i, j):
-    crates = stacks[i - 1][-n : ]
-    del stacks[i - 1][-n : ]
-    stacks[j - 1].extend(crates)
+    moves = parse_moves(chunks[1])
+    yield top(apply1(stacks, moves))
+    yield top(apply2(stacks, moves))
 
 def top(stacks):
     return ''.join([stack[-1] for stack in stacks])
+
+def apply1(stacks, moves):
+    result = [stack.copy() for stack in stacks]
+    for n, src, dst in moves:
+        for _ in range(n):
+            result[dst - 1].append(result[src - 1].pop())
+    return result
+
+def apply2(stacks, moves):
+    result = [stack.copy() for stack in stacks]
+    for n, src, dst in moves:
+        result[dst - 1].extend(result[src - 1][-n : ])
+        del result[src - 1][-n : ]
+    return result
 
 def parse_stacks(chunk):
     stacks = []
@@ -55,7 +47,10 @@ def print_stacks(stacks):
         print(' '.join('[' + stack[i] + ']' if i < len(stack) else '   ' for stack in stacks))
     print(' '.join(str(i + 1).center(3) for i in range(len(stacks))))
 
-def parse_instruction(line):
+def parse_moves(chunk):
+    return list(map(parse_move, chunk.splitlines()))
+
+def parse_move(line):
     return [int(token) for token in line.split() if token.isdigit()]
 
 if __name__ == '__main__':
