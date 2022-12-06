@@ -6,22 +6,11 @@ def solve(input):
     yield start(packet, 14)
 
 def start(packet, n):
-    counts = {}
-    for i in range(len(packet)):
-        if i >= n:
-            dec(counts, packet[i - n])
-        inc(counts, packet[i])
-        if len(counts) == n:
-            return i + 1
+    # window size is too small to bother with sliding window
+    for start in range(n, len(packet) + 1):
+        if len(set(packet[start - n : start])) == n:
+            return start
     return None
-
-def inc(counts, c):
-    counts[c] = counts.get(c, 0) + 1
-
-def dec(counts, c):
-    counts[c] -= 1
-    if counts[c] == 0:
-        del counts[c]
 
 if __name__ == '__main__':
     framework.main()
