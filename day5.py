@@ -1,29 +1,27 @@
 
 import framework
+from functools import reduce
 
 def solve(input):
     chunks = input.split('\n\n')
     stacks = parse_stacks(chunks[0])
     moves = parse_moves(chunks[1])
-    yield top(apply1(stacks, moves))
-    yield top(apply2(stacks, moves))
+    yield top(stacks, moves, move1)
+    yield top(stacks, moves, move2)
 
-def top(stacks):
-    return ''.join([stack[-1] for stack in stacks])
-
-def apply1(stacks, moves):
+def top(stacks, moves, proc):
     result = [stack.copy() for stack in stacks]
-    for n, src, dst in moves:
-        for _ in range(n):
-            result[dst - 1].append(result[src - 1].pop())
-    return result
+    for move in moves:
+        proc(result, *move)
+    return ''.join([stack[-1] for stack in result])
 
-def apply2(stacks, moves):
-    result = [stack.copy() for stack in stacks]
-    for n, src, dst in moves:
-        result[dst - 1].extend(result[src - 1][-n : ])
-        del result[src - 1][-n : ]
-    return result
+def move1(stacks, n, src, dst):
+    for _ in range(n):
+        stacks[dst - 1].append(stacks[src - 1].pop())
+
+def move2(stacks, n, src, dst):
+    stacks[dst - 1].extend(stacks[src - 1][-n : ])
+    del stacks[src - 1][-n : ]
 
 def parse_stacks(chunk):
     stacks = []

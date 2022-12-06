@@ -6,7 +6,6 @@ def solve(input):
     yield start(packet, 14)
 
 def start(packet, n):
-    # window size is too small to bother with sliding window
     for start in range(n, len(packet) + 1):
         if len(set(packet[start - n : start])) == n:
             return start
