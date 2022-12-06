@@ -1,5 +1,5 @@
 
-import __main__, re, os, time, argparse
+import __main__, re, os, time
 
 def main():
   day = get_day_number(__main__)
@@ -8,11 +8,6 @@ def main():
 def get_day_number(mod):
     name = os.path.basename(mod.__file__)
     return int(re.search(r'\d+', name).group())
-
-def parse_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--input', help = 'path to a custom input file')
-    return parser.parse_args()
 
 def print_answers(solver, input):
     start_time = time.perf_counter()
