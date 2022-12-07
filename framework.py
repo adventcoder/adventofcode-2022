@@ -1,9 +1,13 @@
 
 import __main__, re, os, time
 
-def main():
-  day = get_day_number(__main__)
-  print_answers(__main__.solve, get_input(day))
+def main(input = None):
+  if input is None:
+      input = get_input(__main__)
+  print_answers(__main__.solve, input)
+
+def get_input(mod):
+    return read_input(get_day_number(mod))
 
 def get_day_number(mod):
     name = os.path.basename(mod.__file__)
@@ -26,9 +30,6 @@ def format_time(time):
     parts.append('%.3f ms' % (time * 1000))
     return ' '.join(parts)
 
-def get_input(day):
-    with open(get_input_path(day), 'r', encoding = 'utf8') as file:
+def read_input(day):
+    with open('inputs/day{}.txt'.format(day), 'r', encoding = 'utf8') as file:
         return file.read()
-
-def get_input_path(day):
-    return 'inputs/day{}.txt'.format(day)
