@@ -1,31 +1,31 @@
 import framework
 
 def solve(input):
-    sizes = parse_dirs(input)
-    yield sum(size for size in sizes.values() if size <= 100000)
-    unused = 70000000 - sizes['/']
+    sizes = parse_total_sizes(input)
+    yield sum(size for size in sizes if size <= 100000)
+    unused = 70000000 - sizes[0]
     needed = 30000000 - unused
-    yield min(size for size in sizes.values() if size >= needed)
+    yield min(size for size in sizes if size >= needed)
 
-def parse_dirs(input):
-    sizes = {}
-    stack = []
+def parse_total_sizes(input):
+    sizes = []
+    path = []
     for line in input.splitlines():
         tokens = line.split()
         if tokens[0] == '$':
             if tokens[1] == 'cd':
                 if tokens[2] == '..':
-                    child_size = sizes[stack.pop()]
-                    sizes[stack[-1]] += child_size
+                    size = sizes[path.pop()]
+                    sizes[path[-1]] += size
                 else:
-                    path = (stack[-1], tokens[2]) if stack else tokens[2]
-                    stack.append(path)
-                    sizes[path] = 0
+                    # we assume each dir just shows up once in the input, so can use just it's index instead of the dirname
+                    path.append(len(sizes))
+                    sizes.append(0)
         elif tokens[0] != 'dir':
-            sizes[stack[-1]] += int(tokens[0])
-    while len(stack) > 1:
-        child_size = sizes[stack.pop()]
-        sizes[stack[-1]] += child_size
+            sizes[path[-1]] += int(tokens[0])
+    while len(path) > 1:
+        size = sizes[path.pop()]
+        sizes[path[-1]] += size
     return sizes
 
 if __name__ == '__main__':
