@@ -9,10 +9,10 @@ def solve(input):
     yield top(stacks, moves, move1)
     yield top(stacks, moves, move2)
 
-def top(stacks, moves, proc):
+def top(stacks, moves, op):
     result = [stack.copy() for stack in stacks]
     for move in moves:
-        proc(result, *move)
+        op(result, *move)
     return ''.join([stack[-1] for stack in result])
 
 def move1(stacks, n, src, dst):
