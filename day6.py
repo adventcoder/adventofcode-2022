@@ -1,19 +1,18 @@
 import framework
-from utils import sliding_window
 
 def solve(input):
     packet = input.strip()
-    yield start(packet, 4)
-    yield start(packet, 14)
+    yield end_of_marker(packet, 4)
+    yield end_of_marker(packet, 14)
 
-def start(packet, marker_size):
-    for i, window in enumerate(sliding_window(packet, marker_size)):
-        if is_marker(window):
-            return i + marker_size
+def end_of_marker(packet, size):
+    for end in range(size, len(packet) + 1):
+        if is_marker(packet[end - size : end]):
+            return end
     return None
 
-def is_marker(window):
-    return len(set(window)) == len(window)
+def is_marker(slice):
+    return len(set(slice)) == len(slice)
 
 if __name__ == '__main__':
     framework.main()

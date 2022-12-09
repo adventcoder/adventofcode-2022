@@ -9,9 +9,6 @@ def sgn(x):
 def groups(seq, size):
     return (seq[i : i + size] for i in range(0, len(seq), size))
 
-def sliding_window(seq, size):
-    return (seq[i : i + size] for i in range(len(seq) - size + 1))
-
 def product(iterable):
     return functools.reduce(lambda x, y: x * y, iterable, 1)
 

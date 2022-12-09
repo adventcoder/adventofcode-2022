@@ -9,18 +9,21 @@ def solve(input):
 
 def tail_positions(moves, size):
     rope = [Knot() for _ in range(size)]
-    yield rope[-1].x, rope[-1].y
+    yield rope[-1].position()
     for d, n in moves:
         for _ in range(n):
             rope[0].move(d)
             for i in range(1, len(rope)):
                 rope[i].follow(rope[i - 1])
-            yield rope[-1].x, rope[-1].y
+            yield rope[-1].position()
 
 class Knot:
     def __init__(self):
         self.x = 0
         self.y = 0
+
+    def position(self):
+        return (self.x, self.y)
 
     def move(self, d):
         if d == 'U':
