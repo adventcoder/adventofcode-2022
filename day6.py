@@ -6,8 +6,14 @@ def solve(input):
     yield start(packet, 4)
     yield start(packet, 14)
 
-def start(packet, n):
-    return next(i + n for i, marker in enumerate(sliding_window(packet, n)) if len(set(marker)) == n)
+def start(packet, marker_size):
+    for i, window in enumerate(sliding_window(packet, marker_size)):
+        if is_marker(window):
+            return i + marker_size
+    return None
+
+def is_marker(window):
+    return len(set(window)) == len(window)
 
 if __name__ == '__main__':
     framework.main()

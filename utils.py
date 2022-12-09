@@ -3,9 +3,6 @@ import functools, itertools
 
 # Basic Utils
 
-def transposed(rows):
-    return (list(col) for col in zip(*rows))
-
 def groups(seq, size):
     return (seq[i : i + size] for i in range(0, len(seq), size))
 

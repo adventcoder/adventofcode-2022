@@ -3,40 +3,27 @@ from utils import parse_grid, product
 
 def solve(input):
     grid = parse_grid(input, int)
-    yield sum(visible(grid, x, y) for y in range(len(grid)) for x in range(len(grid[y])))
-    yield max(scenic_score(grid, x, y) for y in range(len(grid)) for x in range(len(grid[y])))
+    yield sum(visible(origin, rays) for origin, rays in view_points(grid))
+    yield max(scenic_score(origin, rays) for origin, rays in view_points(grid))
 
-def visible(grid, x, y):
-    return any(all_viewable(line, grid[y][x]) for line in lines(grid, x, y))
+def view_points(grid):
+    for x, col in enumerate(zip(*grid)):
+        for y, row in enumerate(grid):
+            yield grid[y][x], (reversed(row[ : x]), row[x + 1 : ], reversed(col[ : y]), col[y + 1 : ])
 
-def scenic_score(grid, x, y):
-    return product(count_viewable(line, grid[y][x]) for line in lines(grid, x, y))
+def visible(origin, rays):
+    return any(all(origin > height for height in ray) for ray in rays)
 
-def all_viewable(line, base_height):
-    return all(base_height > height for height in line)
+def scenic_score(origin, rays):
+    return product(viewing_distance(origin, ray) for ray in rays)
 
-def count_viewable(line, base_height):
+def viewing_distance(origin, ray):
     n = 0
-    for height in line:
+    for height in ray:
         n += 1
-        if height >= base_height:
+        if origin <= height:
             break
     return n
-
-def lines(grid, x, y):
-    return (up(grid, x, y), left(grid, x, y), right(grid, x, y), down(grid, x, y))
-
-def left(grid, x, y):
-    return reversed(grid[y][ : x])
-
-def right(grid, x, y):
-    return grid[y][x + 1 : ]
-
-def up(grid, x, y):
-    return map(lambda row: row[x], reversed(grid[ : y]))
-
-def down(grid, x, y):
-    return map(lambda row: row[x], grid[y + 1 : ])
 
 if __name__ == '__main__':
     framework.main()

@@ -1,6 +1,6 @@
 
 import framework
-from utils import groups, transposed
+from utils import groups
 
 def solve(input):
     chunks = input.split('\n\n')
@@ -27,7 +27,7 @@ def parse_stacks(chunk):
     rows = [[group.strip() for group in groups(line, 4)] for line in chunk.splitlines()]
     for i, label in enumerate(rows.pop()):
         assert i == int(label) - 1
-    stacks = list(transposed(reversed(rows)))
+    stacks = [list(reversed(col)) for col in zip(*rows)]
     for stack in stacks:
         while not stack[-1]:
             stack.pop()
