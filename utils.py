@@ -3,6 +3,9 @@ import functools, itertools
 
 # Basic Utils
 
+def sgn(x):
+    return (x > 0) - (x < 0)
+
 def groups(seq, size):
     return (seq[i : i + size] for i in range(0, len(seq), size))
 
