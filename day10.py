@@ -1,29 +1,31 @@
 import framework
 
 def solve(input):
-    sums = parse_sums(input)
-    yield sum(signal_strength(sums, n) for n in range(20, 220 + 1, 40))
-    yield '\n'.join(scan_line(sums, y, 40) for y in range(6))
+    values = cpu(input)
+    cycle = 0
+    total_signal = 0
+    screen = [['.' for _ in range(40)] for _ in range(6)]
+    for y in range(len(screen)):
+        for x in range(len(screen[y])):
+            value = next(values)
+            cycle += 1
+            if (cycle - 20) % 40 == 0:
+                total_signal += value * cycle
+            if value - 1 <= x <= value + 1:
+                screen[y][x] = '#'
+    yield total_signal
+    yield ''.join(''.join(row) + '\n' for row in screen) #TODO: ocr
 
-def signal_strength(sums, n):
-    return n * value(sums, n - 1)
-
-def scan_line(sums, y, width):
-    return ''.join('#' if x - 1 <= value(sums, x + y * width) <= x + 1 else '.' for x in range(width))
-
-def value(sums, t):
-    return sums[-1] * (t // len(sums)) + sums[t % len(sums)] + 1
-
-def parse_sums(input):
-    sums = [0]
+def cpu(input):
+    x = 1
     for line in input.splitlines():
-        tokens = line.strip().split()
+        tokens = line.split()
         if tokens[0] == 'noop':
-            sums.append(sums[-1])
+            yield x
         elif tokens[0] == 'addx':
-            sums.append(sums[-1])
-            sums.append(sums[-1] + int(tokens[1]))
-    return sums
+            yield x
+            yield x
+            x += int(tokens[1])
 
 if __name__ == '__main__':
     framework.main()

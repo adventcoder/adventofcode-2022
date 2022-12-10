@@ -41,12 +41,9 @@ def print_answer(n, answer, answer_time):
     label = 'Part {}:'.format(n)
     lines = str(answer).splitlines()
     for i, line in enumerate(lines):
-        parts = []
-        parts.append(label if i == 0 else ' ' * len(label))
-        parts.append(line)
-        if i == len(lines) - 1:
-            parts.append('[' + format_time(answer_time) + ']')
-        print(*parts)
+        prefix = label if i == 0 else ' ' * len(label)
+        suffix = '[' + format_time(answer_time) + ']' if i == len(lines) - 1 else ''
+        print(prefix, line, suffix)
 
 def format_time(time):
     seconds = math.floor(time)
