@@ -4,25 +4,27 @@ import __main__, argparse, os, sys, time, math
 def main(input = None):
     args = parse_args()
     if input is None:
-        input = get_input(args)
+        input = get_input(__main__, args)
     print_answers(__main__.solve, input)
 
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--input', help = 'path to custom input file (use "-" for stdin)')
+    parser.add_argument('--bigboy', action = 'store_true', default = False, help = 'use bigboy input instead of normal input')
     return parser.parse_args()
 
-def get_input(args, mod = __main__):
+def get_input(mod, args):
     if args.input is not None:
         if args.input == '-':
             return sys.stdin.read()
         else:
             return read_input(args.input)
-    return read_input(get_input_path(mod))
+    return read_input(get_input_path(mod, args))
 
-def get_input_path(mod):
+def get_input_path(mod, args):
     name = os.path.basename(mod.__file__).replace('.py', '.txt')
-    return os.path.join(os.path.dirname(mod.__file__), 'inputs', name)
+    input_dirname = 'bigboy_inputs' if args.bigboy else 'inputs'
+    return os.path.join(os.path.dirname(mod.__file__), input_dirname, name)
 
 def read_input(path):
     with open(path, 'r', encoding = 'utf8') as file:
