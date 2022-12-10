@@ -38,7 +38,15 @@ def print_answers(solver, input):
         start_time = time.perf_counter()
 
 def print_answer(n, answer, answer_time):
-    print('Part {}: {} [{}]'.format(n, answer, format_time(answer_time)))
+    label = 'Part {}:'.format(n)
+    lines = str(answer).splitlines()
+    for i, line in enumerate(lines):
+        parts = []
+        parts.append(label if i == 0 else ' ' * len(label))
+        parts.append(line)
+        if i == len(lines) - 1:
+            parts.append('[' + format_time(answer_time) + ']')
+        print(*parts)
 
 def format_time(time):
     seconds = math.floor(time)
