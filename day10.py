@@ -1,4 +1,6 @@
 import framework
+from utils import ocr
+from fonts import letters4x6
 
 def solve(input):
     values = cpu(input)
@@ -14,7 +16,7 @@ def solve(input):
             if value - 1 <= x <= value + 1:
                 screen[y][x] = '#'
     yield total_signal
-    yield ''.join(''.join(row) + '\n' for row in screen) #TODO: ocr
+    yield ocr(screen, letters4x6)
 
 def cpu(input):
     x = 1
