@@ -1,5 +1,6 @@
 
-import __main__, argparse, os, sys, time, math
+import __main__, argparse, os, sys, time
+from math import floor
 
 def main(input = None):
     args = parse_args()
@@ -18,17 +19,13 @@ def get_input(mod, args):
         if args.input == '-':
             return sys.stdin.read()
         else:
-            return read_input(args.input)
-    return read_input(get_input_path(mod, args))
+            return read(args.input)
+    return read(get_input_path(mod, args))
 
 def get_input_path(mod, args):
     name = os.path.basename(mod.__file__).replace('.py', '.txt')
     input_dirname = 'bigboy_inputs' if args.bigboy else 'inputs'
     return os.path.join(os.path.dirname(mod.__file__), input_dirname, name)
-
-def read_input(path):
-    with open(path, 'r', encoding = 'utf8') as file:
-        return file.read()
 
 def print_answers(solver, input):
     start_time = time.perf_counter()
@@ -46,10 +43,14 @@ def print_answer(n, answer, answer_time):
         print(prefix, line, suffix)
 
 def format_time(time):
-    seconds = math.floor(time)
+    seconds = floor(time)
     milliseconds = (time - seconds) * 1000
     parts = []
     if seconds:
         parts.append('%d s' % seconds)
     parts.append('%.3f ms' % milliseconds)
     return ' '.join(parts)
+
+def read(path):
+    with open(path, 'r', encoding = 'utf8') as file:
+        return file.read()
