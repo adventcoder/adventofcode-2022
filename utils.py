@@ -1,4 +1,4 @@
-# Basic Utils
+# Basic Utils (that should be in stdlib)
 
 def sgn(x):
     return (x > 0) - (x < 0)
@@ -11,14 +11,14 @@ def groups(seq, size):
 def parse_list(chunk, parser = str):
     return [parser(line.strip()) for line in chunk.splitlines()]
 
-def parse_table(chunk, parsers = None, separator = None):
-    if parsers is None:
-        return parse_list(chunk, lambda line: line.split(separator))
-    else:
-        return parse_list(chunk, lambda line: tuple(f(x) for f, x in zip(parsers, line.split(separator, len(parsers)))))
-
 def parse_grid(chunk, parser = str):
-    return parse_list(chunk, lambda line: [parser(c) for c in line])
+    return [[parser(c) for c in line] for line in chunk.splitlines()]
+
+def parse_table(chunk, parsers = None, separator = None):
+    rows = (line.strip().split(separator) for line in chunk.splitlines())
+    if parsers is not None:
+        rows = (tuple(f(x) for f, x in zip(parsers, values)) for values in rows)
+    return list(rows)
 
 # "OCR" (this code was written while drunk)
 

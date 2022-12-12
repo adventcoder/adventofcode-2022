@@ -2,12 +2,12 @@
 import framework
 from collections import deque
 from functools import reduce
-import math
+from math import lcm
 
 def solve(input):
     monkeys = tuple(map(Monkey, input.split('\n\n')))
     yield monkey_business(monkeys, 20, lambda worry: worry // 3)
-    modulus = reduce(math.lcm, [monkey.test for monkey in monkeys], 1)
+    modulus = reduce(lcm, [monkey.test for monkey in monkeys], 1)
     yield monkey_business(monkeys, 10000, lambda worry: worry % modulus)
 
 def parse_op(expr):
