@@ -1,6 +1,3 @@
-            	
-import functools
-
 # Basic Utils
 
 def sgn(x):
@@ -8,9 +5,6 @@ def sgn(x):
 
 def groups(seq, size):
     return (seq[i : i + size] for i in range(0, len(seq), size))
-
-def product(iterable):
-    return functools.reduce(lambda x, y: x * y, iterable, 1)
 
 # Common Input Parsing Utils
 

@@ -1,5 +1,6 @@
 import framework
-from utils import parse_grid, product
+from utils import parse_grid
+from math import prod
 
 def solve(input):
     grid = parse_grid(input, int)
@@ -15,7 +16,7 @@ def visible(origin, rays):
     return any(all(origin > height for height in ray) for ray in rays)
 
 def scenic_score(origin, rays):
-    return product(viewing_distance(origin, ray) for ray in rays)
+    return prod(viewing_distance(origin, ray) for ray in rays)
 
 def viewing_distance(origin, ray):
     n = 0
