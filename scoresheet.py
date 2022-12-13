@@ -22,10 +22,10 @@ def scoresheet(args):
     print()
     total_stars = 0
     total_time = 0
-    for day, input, answers in get_inputs_with_answers(args):
+    for day, input, answers in get_test_data(args):
         mod = importlib.import_module('day{}'.format(day))
         print("Day {}: ".format(str(day).rjust(2)), end = '', flush = True)
-        stars, time = check(mod.solve, input, answers)
+        stars, time = test(mod.solve, input, answers)
         print(" {}/{} [{}]".format(stars, len(answers), format_time(time)))
         total_stars += stars
         total_time += time
@@ -33,7 +33,7 @@ def scoresheet(args):
     print("Total stars:", total_stars)
     print("Total time:", format_time(total_time))
 
-def check(solver, input, answers):
+def test(solver, input, answers):
     stars = 0
     total_time = 0
     start_time = time.perf_counter()
@@ -66,7 +66,7 @@ def format_time(time):
     parts.append('%.3f ms' % milliseconds)
     return ' '.join(parts)
 
-def get_inputs_with_answers(args):
+def get_test_data(args):
     input_paths = {}
     answers_paths = {}
     if args.bigboy:
