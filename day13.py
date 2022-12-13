@@ -1,17 +1,13 @@
 import framework
-from functools import cmp_to_key
-from math import prod
 from ast import literal_eval
 
 def solve(input):
     pairs = [[literal_eval(line) for line in chunk.splitlines()] for chunk in input.split('\n\n')]
     yield sum(i + 1 for i, (L, R) in enumerate(pairs) if compare(L, R) < 0)
 
-    divider_packets = [[[2]], [[6]]]
-    packets = [packet for pair in pairs for packet in pair]
-    packets.extend(divider_packets)
-    packets.sort(key = cmp_to_key(compare))
-    yield prod(i + 1 for i, packet in enumerate(packets) if packet in divider_packets)
+    i = sum(compare(packet, [[2]]) < 0 for pair in pairs for packet in pair)
+    j = sum(compare(packet, [[6]]) < 0 for pair in pairs for packet in pair)
+    yield (i + 1) * (j + 2)
 
 def compare(L, R):
     if isinstance(L, int) and isinstance(R, int):
