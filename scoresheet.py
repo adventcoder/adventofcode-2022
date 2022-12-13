@@ -1,6 +1,5 @@
 
-import importlib, argparse, os, time, re
-from itertools import islice
+import importlib, argparse, sys, os, time, re
 from math import floor
 
 inputs_dirname = 'inputs'
@@ -8,7 +7,10 @@ input_name_pattern = r'day(\d+).txt'
 answers_name_pattern = r'day(\d+)_answers.txt'
 
 def main():
-    scoresheet(parse_args())
+    try:
+        scoresheet(parse_args())
+    except KeyboardInterrupt:
+        sys.exit(0)
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -22,19 +24,36 @@ def scoresheet(args):
     total_time = 0
     for day, input, answers in get_inputs_with_answers(args):
         mod = importlib.import_module('day{}'.format(day))
-        stars, time = exec(mod.solve, input, answers)
-        print("Day {}: {} [{}]".format(str(day).rjust(2), (stars * '*').ljust(2), format_time(time)))
+        print("Day {}: ".format(str(day).rjust(2)), end = '', flush = True)
+        stars, time = check(mod.solve, input, answers)
+        print(" {}/{} [{}]".format(stars, len(answers), format_time(time)))
         total_stars += stars
         total_time += time
     print()
     print("Total stars:", total_stars)
     print("Total time:", format_time(total_time))
 
-def exec(solver, input, answers):
+def check(solver, input, answers):
+    stars = 0
+    total_time = 0
     start_time = time.perf_counter()
-    attempts = list(islice(solver(input), len(answers)))
-    end_time = time.perf_counter()
-    return sum(str(attempt) == answer for attempt, answer in zip(attempts, answers)), end_time - start_time
+    attempts = solver(input)
+    for answer in answers:
+        try:
+            attempt = next(attempts)
+        except StopIteration:
+            print('~', end = '', flush = True)
+        except Exception:
+            print('!', end = '', flush = True)
+        else:
+            total_time += time.perf_counter() - start_time
+            start_time = time.perf_counter()
+            if attempt is not None and str(attempt) == answer:
+                print('*', end = '', flush = True)
+                stars += 1
+            else:
+                print('X', end = '', flush = True)
+    return stars, total_time
 
 def format_time(time):
     minutes, seconds = divmod(floor(time), 60)
