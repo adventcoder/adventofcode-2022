@@ -57,10 +57,11 @@ def get_input(day, args):
     if not os.path.exists(path):
         print('Getting input for day', day)
         try:
-            write(path, download_input(path, day, args))
-        except OSError as error:
-            print('Failed!!!', error)
+            input = download_input(day, args)
+        except urllib.HTTPError as error:
+            print('Failed!!!', error.status, error.reason)
         else:
+            write(path, input)
             print('Done')
 
 def download_input(day, args):
@@ -75,11 +76,18 @@ def get_answers(day, args):
     if not os.path.exists(path) or len(read_answers(path)) < total_answers(day):
         print('Getting answers for day', day)
         try:
-            write_answers(path, download_answers(day, args))
+            answers = download_answers(day, args)
         except OSError as error:
             print('Failed!!!', error)
         else:
-            print('Done')
+            if len(answers) == 0:
+                print('No answers found!')
+            else:
+                write_answers(path, answers)
+                if len(answers) < total_answers(day):
+                    print('Missing some answers for day', day)
+                else:
+                    print('Done')
 
 def total_answers(day):
     return 1 if day == 25 else 2
