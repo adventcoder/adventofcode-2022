@@ -1,6 +1,5 @@
 
 import framework
-from collections import deque
 from functools import reduce
 from math import lcm
 
@@ -26,7 +25,7 @@ class Monkey:
             if label == 'Starting items':
                 self.starting_items = list(map(int, value.split(',')))
             elif label == 'Operation':
-                self.inspect = parse_op(value.split('=')[1])
+                self.op = parse_op(value.split('=')[1])
             elif label == 'Test':
                 self.test = int(value.split()[-1])
             elif label == 'If true':
@@ -38,15 +37,20 @@ class Monkey:
         return self.index_if_true if item % self.test == 0 else self.index_if_false
 
 def monkey_business(monkeys, rounds, relief):
-    queues = [deque(monkey.starting_items) for monkey in monkeys]
     inspections = [0] * len(monkeys)
-    for _ in range(rounds):
-        for i, monkey in enumerate(monkeys):
-            while queues[i]:
-                item = queues[i].popleft()
-                new_item = relief(monkey.inspect(item))
-                inspections[i] += 1
-                queues[monkey.throw_index(new_item)].append(new_item)
+    for starting_index, monkey in enumerate(monkeys):
+        for item in monkey.starting_items:
+            index = starting_index
+            for _ in range(rounds):
+                # An item can be processed multiple times in a single round if new index >= orig index
+                # TODO: cycle detection? memoization?
+                while True:
+                    inspections[index] += 1
+                    orig_index = index
+                    item = relief(monkeys[index].op(item))
+                    index = monkeys[index].throw_index(item)
+                    if index < orig_index:
+                        break
     inspections.sort(reverse = True)
     return inspections[0] * inspections[1]
 
