@@ -14,11 +14,11 @@ def parse_list(chunk, parser = str):
 def parse_grid(chunk, parser = str):
     return [[parser(c) for c in line] for line in chunk.splitlines()]
 
-def parse_table(chunk, parsers = None, separator = None):
-    rows = (line.strip().split(separator) for line in chunk.splitlines())
-    if parsers is not None:
-        rows = (tuple(f(x) for f, x in zip(parsers, values)) for values in rows)
-    return list(rows)
+def parse_table(chunk, parsers, separator = None):
+    return [parse_tuple(line, parsers, separator) for line in chunk.splitlines()]
+
+def parse_tuple(line, parsers, separator = None):
+    return tuple(f(x) for f, x in zip(parsers, line.split(separator)))
 
 # "OCR" (this code was written while drunk)
 
