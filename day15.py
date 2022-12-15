@@ -1,5 +1,6 @@
 import framework
 import re
+from itertools import combinations
 
 def solve(input):
     sensors = []
@@ -37,21 +38,48 @@ def coverage(sensors, line_y):
     return total_size
 
 def find_missing_beacon(sensors, xs, ys):
-    #TODO: this is pretty slow!
-    stack = [(xs, ys)]
-    while stack:
-        xs, ys = stack.pop()
-        if len(xs) * len(ys) == 1:
-            return xs.min, ys.min
-        else:
-            for new_xs in xs.split():
-                for new_ys in ys.split():
-                    if not any(completely_covers(sensor, new_xs, new_ys) for sensor in sensors):
-                        stack.append((new_xs, new_ys))
+    for L1, L2 in combinations(find_line_segments(sensors), 2):
+        # slopes should all be either 1 or -1
+        # the beacon will be at the intersection of two perpendicular lines
+        # TODO: probably don't need to enumerate line segments, could just loop directly over intersections?
+        m1 = (L1[3] - L1[1]) // (L1[2] - L1[0])
+        m2 = (L2[3] - L2[1]) // (L2[2] - L2[0])
+        if m1 == -m2:
+            # y = y1 + m1 (x - x1)
+            # y = y2 - m1 (x - x2)
+            #
+            # x = (x1 + x2 + (y2-y1)/m1)/2
+            # y = (y1 + y2 + m1 (x2-x1))/2
+            #
+            x = (L1[0] + L2[0] + (L2[1] - L1[1])//m1) // 2
+            y = (L1[1] + L2[1] + m1*(L2[0] - L1[0])) // 2
+            if x in xs and y in ys:
+                return x, y
 
-def completely_covers(sensor, xs, ys):
-    x0, y0, r = sensor
-    return all(distance(x0, y0, x1, y1) <= r for x1 in (xs.min, xs.max) for y1 in (ys.min, ys.max))
+def find_line_segments(sensors):
+    # Find line segments that the missing beacon could lie on.
+    # These are the line segments formed between the corners of pairs of sensors that are one square apart.
+    for (x1, y1, r1), (x2, y2, r2) in combinations(sensors, 2):
+        if distance(x1, y1, x2, y2) == r1 + r2 + 2:
+            if x2 > x1:
+                x1, y1, r1, x2, y2, r2 = x2, y2, r2, x1, y1, r1
+            if y2 > y1:
+                if x1 > x2 - r2 - 1:
+                    yield x1, y1 + r1 + 1, x2, y2 - r2 - 1 # a bottom -> b top
+                elif x1 < x2 - r2 - 1:
+                    yield x2 - r2 - 1, y2, x1 + r1 + 1, y1 # b left -> a right
+                else:
+                    assert False # TODO
+            else:
+                if x1 > x2 - r2 - 1:
+                    yield x1, y1 - r1 - 1, x2, y2 + r2 + 1 # a top -> b bottom
+                elif x1 < x2 - r2 - 1:
+                    yield x2 - r2 - 1, y2, x1 + r1 + 1, y1 # b left -> a right
+                else:
+                    assert False # TODO
+
+def covers(sensors, x, y):
+    return any(distance(x0, y0, x, y) <= r for x0, y0, r in sensors)
 
 def distance(x0, y0, x1, y1):
     return abs(y1 - y0) + abs(x1 - x0)
@@ -64,12 +92,8 @@ class Interval:
     def __len__(self):
         return self.max - self.min + 1 if self.min <= self.max else 0
 
-    def split(self):
-        mid = self.min + (self.max - self.min) // 2
-        if self.min <= mid:
-            yield Interval(self.min, mid)
-        if mid < self.max:
-            yield Interval(mid + 1, self.max)
+    def __contains__(self, x):
+        return self.min <= x <= self.max
 
 if __name__ == '__main__':
     framework.main()
