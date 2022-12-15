@@ -1,13 +1,17 @@
 import framework
 from itertools import pairwise
+import gif
 
 def solve(input):
     grid = parse_grid(input)
     max_y = max(y for _, y in grid.keys())
     floor_y = max_y + 2
-    fill(grid, (500, 0), floor_y, max_y)
+    start = (500, 0)
+    # with gif.open_graphics('day14.gif', gif.ScreenDescriptor(2 * floor_y + 1, floor_y)) as graphics:
+    #     render_grid(graphics, grid, start, floor_y)
+    fill(grid, start, floor_y, max_y)
     yield sum(c == 'o' for c in grid.values())
-    fill(grid, (500, 0), floor_y, floor_y)
+    fill(grid, start, floor_y, floor_y)
     yield sum(c == 'o' for c in grid.values())
 
 def parse_grid(input):
@@ -19,6 +23,20 @@ def parse_grid(input):
                 for x in range(min(x0, x1), max(x0, x1) + 1):
                     grid[(x, y)] = '#'
     return grid
+
+def render_grid(graphics, grid, start, floor_y):
+    x0, y0 = start[0] - floor_y, start[1]
+    x1, y1 = start[0] + floor_y + 1, start[1] + floor_y
+    image = gif.Image(0, 0, x1 - x0, y1 - y0)
+    image.colors = [0x000000, 0xCCCCCC, 0xFFFFFF]
+    for y in range(y0, y1):
+        for x in range(x0, x1):
+            c = grid.get((x, y), '.')
+            if c == 'o':
+                image.set_pixel(x - x0, y - y0, 2)
+            elif c == '#':
+                image.set_pixel(x - x0, y - y0, 1)
+    graphics.render(image, delay = 1)
 
 def fill(grid, start, floor_y, max_y):
     path = []
