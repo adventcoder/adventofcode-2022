@@ -2,6 +2,7 @@
 import framework
 from functools import reduce
 from math import lcm
+from collections import Counter
 
 def solve(input):
     monkeys = tuple(map(Monkey, input.split('\n\n')))
@@ -37,22 +38,40 @@ class Monkey:
         return self.index_if_true if item % self.test == 0 else self.index_if_false
 
 def monkey_business(monkeys, rounds, relief):
-    inspections = [0] * len(monkeys)
-    for starting_index, monkey in enumerate(monkeys):
-        for item in monkey.starting_items:
-            index = starting_index
-            for _ in range(rounds):
+    # TODO: clean this
+    def process(index, item):
+        seen = {}
+        counts = [Counter()]
+        for round in range(rounds):
+            key = (index, item)
+            if key in seen:
+                last_round = seen[(index, item)]
+                period = round - last_round
+                diff = counts[round] - counts[last_round]
+                final_counts = Counter()
+                for i in range(len(monkeys)):
+                    final_counts[i] = counts[(rounds - last_round) % period + last_round][i] + ((rounds - last_round) // period) * diff[i]
+                return final_counts
+            seen[key] = round
+
+            counts.append(counts[-1].copy())
+            while True:
                 # An item can be processed multiple times in a single round if new index >= orig index
-                # TODO: cycle detection? memoization?
-                while True:
-                    inspections[index] += 1
-                    orig_index = index
-                    item = relief(monkeys[index].op(item))
-                    index = monkeys[index].throw_index(item)
-                    if index < orig_index:
-                        break
-    inspections.sort(reverse = True)
-    return inspections[0] * inspections[1]
+                counts[-1][index] += 1
+                old_index = index
+                item = relief(monkeys[index].op(item))
+                index = monkeys[index].throw_index(item)
+                if index < old_index:
+                    break
+
+        return counts[-1]
+
+    total_counts = Counter()
+    for index, monkey in enumerate(monkeys):
+        for item in monkey.starting_items:
+            total_counts += process(index, item)
+    s = sorted(total_counts.values(), reverse = True)
+    return s[0] * s[1]
 
 if __name__ == '__main__':
     framework.main()

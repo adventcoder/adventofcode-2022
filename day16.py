@@ -1,6 +1,7 @@
 import framework
 import math
 from functools import cache
+from itertools import combinations
 
 def solve(input):
     statements = [line.split(';') for line in input.splitlines()]
@@ -27,33 +28,31 @@ def solve(input):
                 if tunnels[i][j] > tunnels[i][k] + tunnels[k][j]:
                     tunnels[i][j] = tunnels[i][k] + tunnels[k][j]
 
+    targets = [i for i, rate in enumerate(rates) if rate > 0]
+
     @cache
     def find_max_pressure(i, time, opened = 0):
         max_pressure = 0
-        for j in range(len(valves)):
+        for j in targets:
             dt = tunnels[i][j] + 1
-            if (opened >> j) & 1 == 0 and dt <= time and rates[j] > 0: # not opened and can open and worth opening
+            if (opened >> j) & 1 == 0 and dt <= time:
                 pressure = rates[j] * (time - dt) + find_max_pressure(j, time - dt, opened | (1 << j))
                 if pressure > max_pressure:
                     max_pressure = pressure
         return max_pressure
 
     def find_max_pressure2(start, time):
-        max_pressure = 0
         # Just loop over all ways to divide up the valves. This is super slow!
         # TODO: Maybe I'll revisit it some day (I won't)
-        all_is = [i for i, rate in enumerate(rates) if rate > 0]
-        all_opened = 0
-        for i in all_is:
-            all_opened |= 1 << i
-        for n in range(1 << (len(all_is) - 1)):
-            opened = 0
-            for j in range(len(all_is) - 1):
-                if (n >> j) & 1 == 1:
-                    opened |= 1 << all_is[j]
-            pressure = find_max_pressure(start, time, opened) + find_max_pressure(start, time, opened ^ all_opened)
-            if pressure > max_pressure:
-                max_pressure = pressure
+        max_pressure = 0
+        for n in range(len(targets) // 2 + 1):
+            for subset in combinations(targets, n):
+                opened = 0
+                for i in subset:
+                    opened |= 1 << i
+                pressure = find_max_pressure(start, time, opened) + find_max_pressure(start, time, ~opened)
+                if pressure > max_pressure:
+                    max_pressure = pressure
         return max_pressure
 
     yield find_max_pressure(valves.index('AA'), 30)
