@@ -11,78 +11,26 @@ def solve(input):
         beacons.add((x1, y1))
 
     yield coverage(sensors, 2000000) - sum(y == 2000000 for _, y in beacons)
-
-    x, y = find_missing_beacon(sensors, Interval(0, 4000000), Interval(0, 4000000))
-    yield x * 4000000 + y
+    yield tuning_frequency(sensors, 4000000)
 
 def coverage(sensors, line_y):
-    # Gather x intervals for each sensor
     xss = []
     for x, y, r in sensors:
         dx = r - abs(y - line_y)
         if dx >= 0:
             xss.append(Interval(x - dx, x + dx))
+    return sum(len(xs) for xs in union(xss))
 
-    # Calculate total size of all intervals taking into account overlaps
-    total_size = 0
+def union(xss):
     xss.sort(key = lambda x: x.min)
     curr = xss[0]
     for xs in xss[1:]:
         if xs.min > curr.max:
-            total_size += len(curr)
+            yield curr
             curr = xs
         elif xs.max > curr.max:
             curr = Interval(curr.min, xs.max)
-    total_size += len(curr)
-
-    return total_size
-
-def find_missing_beacon(sensors, xs, ys):
-    for L1, L2 in combinations(find_line_segments(sensors), 2):
-        # slopes should all be either 1 or -1
-        # the beacon will be at the intersection of two perpendicular lines
-        # TODO: probably don't need to enumerate line segments, could just loop directly over intersections?
-        m1 = (L1[3] - L1[1]) // (L1[2] - L1[0])
-        m2 = (L2[3] - L2[1]) // (L2[2] - L2[0])
-        if m1 == -m2:
-            # y = y1 + m1 (x - x1)
-            # y = y2 - m1 (x - x2)
-            #
-            # x = (x1 + x2 + (y2-y1)/m1)/2
-            # y = (y1 + y2 + m1 (x2-x1))/2
-            #
-            x = (L1[0] + L2[0] + (L2[1] - L1[1])//m1) // 2
-            y = (L1[1] + L2[1] + m1*(L2[0] - L1[0])) // 2
-            if x in xs and y in ys:
-                return x, y
-
-def find_line_segments(sensors):
-    # Find line segments that the missing beacon could lie on.
-    # These are the line segments formed between the corners of pairs of sensors that are one square apart.
-    for (x1, y1, r1), (x2, y2, r2) in combinations(sensors, 2):
-        if distance(x1, y1, x2, y2) == r1 + r2 + 2:
-            if x2 > x1:
-                x1, y1, r1, x2, y2, r2 = x2, y2, r2, x1, y1, r1
-            if y2 > y1:
-                if x1 > x2 - r2 - 1:
-                    yield x1, y1 + r1 + 1, x2, y2 - r2 - 1 # a bottom -> b top
-                elif x1 < x2 - r2 - 1:
-                    yield x2 - r2 - 1, y2, x1 + r1 + 1, y1 # b left -> a right
-                else:
-                    assert False # TODO
-            else:
-                if x1 > x2 - r2 - 1:
-                    yield x1, y1 - r1 - 1, x2, y2 + r2 + 1 # a top -> b bottom
-                elif x1 < x2 - r2 - 1:
-                    yield x2 - r2 - 1, y2, x1 + r1 + 1, y1 # b left -> a right
-                else:
-                    assert False # TODO
-
-def covers(sensors, x, y):
-    return any(distance(x0, y0, x, y) <= r for x0, y0, r in sensors)
-
-def distance(x0, y0, x1, y1):
-    return abs(y1 - y0) + abs(x1 - x0)
+    yield curr
 
 class Interval:
     def __init__(self, min, max):
@@ -92,8 +40,28 @@ class Interval:
     def __len__(self):
         return self.max - self.min + 1 if self.min <= self.max else 0
 
-    def __contains__(self, x):
-        return self.min <= x <= self.max
+def tuning_frequency(sensors, n):
+    pos_lines = []
+    neg_lines = []
+    for (x1, y1, r1), (x2, y2, r2) in combinations(sensors, 2):
+        if distance(x1, y1, x2, y2) == r1 + r2 + 2:
+            dx = (x2 > x1) - (x2 < x1)
+            dy = (y2 > y1) - (y2 < y1)
+            p = (x1 + dx * (r1 + 1), y1) # or (x2 - dx * (r2+1), y2)
+            (neg_lines if dx == dy else pos_lines).append(p)
+    for x1, y1 in pos_lines:
+        for x2, y2 in neg_lines:
+            # Intersection of: y = x + y1 - x1 and y = x2 + y2 - x
+            x = (x2 + x1 + y2 - y1) // 2
+            y = (x2 + y1 + y2 - x1) // 2
+            if 0 <= x <= n and 0 <= y <= n and not covers(sensors, x, y):
+                return x * 4000000 + y
+
+def covers(sensors, x, y):
+    return any(distance(x0, y0, x, y) <= r for x0, y0, r in sensors)
+
+def distance(x0, y0, x1, y1):
+    return abs(y1 - y0) + abs(x1 - x0)
 
 if __name__ == '__main__':
     framework.main()
