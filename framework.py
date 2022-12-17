@@ -1,17 +1,18 @@
 
-import __main__, argparse, os, sys, time
+import __main__, argparse, os, sys, time, ast
 from math import floor
 
 def main(input = None):
     args = parse_args()
     if input is None:
         input = get_input(__main__, args)
-    print_answers(__main__.solve, input)
+    print_answers(__main__.solve, input, **get_solver_args(args))
 
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--input', help = 'path to custom input file (use "-" for stdin)')
     parser.add_argument('--bigboy', action = 'store_true', default = False, help = 'use bigboy input instead of normal input')
+    parser.add_argument('--solver-arg', dest = 'solver_args', default = [], action = 'append', metavar='KEY=VALUE')
     return parser.parse_args()
 
 def get_input(mod, args):
@@ -22,14 +23,21 @@ def get_input(mod, args):
             return read(args.input)
     return read(get_input_path(mod, args))
 
+def get_solver_args(args):
+    kwargs = {}
+    for str in args.solver_args:
+        key, value = str.split('=', 2)
+        kwargs[key] = ast.literal_eval(value)
+    return kwargs
+
 def get_input_path(mod, args):
     name = os.path.basename(mod.__file__).replace('.py', '.txt')
     input_dirname = 'bigboy_inputs' if args.bigboy else 'inputs'
     return os.path.join(os.path.dirname(mod.__file__), input_dirname, name)
 
-def print_answers(solver, input):
+def print_answers(solver, input, **kwargs):
     start_time = time.perf_counter()
-    for i, answer in enumerate(solver(input)):
+    for i, answer in enumerate(solver(input, **kwargs)):
         answer_time = time.perf_counter() - start_time
         print_answer(i + 1, answer, answer_time)
         start_time = time.perf_counter()

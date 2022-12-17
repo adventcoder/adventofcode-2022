@@ -42,13 +42,13 @@ def test(solver, input, answers):
         try:
             attempt = next(attempts)
         except StopIteration:
-            print('~', end = '', flush = True)
+            print('.', end = '', flush = True)
         except Exception:
             print('!', end = '', flush = True)
         else:
             total_time += time.perf_counter() - start_time
             start_time = time.perf_counter()
-            if attempt is not None and str(attempt) == answer:
+            if str(attempt) == answer:
                 print('*', end = '', flush = True)
                 stars += 1
             else:

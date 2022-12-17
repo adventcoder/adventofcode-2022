@@ -2,7 +2,7 @@ import framework
 import math
 from functools import cache
 
-def solve(input):
+def solve(input, dot_path = None):
     statements = [line.split(';') for line in input.splitlines()]
 
     valves = []
@@ -19,6 +19,15 @@ def solve(input):
         for valve in tokens[4:]:
             tunnels[i][valves.index(valve)] = 1
         tunnels[i][i] = 0
+
+    if dot_path is not None:
+        with open(dot_path, 'w') as file:
+            print('digraph {', file = file)
+            for i in range(len(valves)):
+                for j in range(len(valves)):
+                    if i != j and tunnels[i][j] != math.inf:
+                        print(valves[i], '->', valves[j], ';', file = file)
+            print('}', file = file)
 
     # Run Floyd Warshall
     for k in range(len(valves)):
