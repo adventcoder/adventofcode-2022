@@ -1,7 +1,6 @@
 import framework
 import math
 from functools import cache
-from itertools import combinations
 
 def solve(input):
     statements = [line.split(';') for line in input.splitlines()]
@@ -28,35 +27,33 @@ def solve(input):
                 if tunnels[i][j] > tunnels[i][k] + tunnels[k][j]:
                     tunnels[i][j] = tunnels[i][k] + tunnels[k][j]
 
-    targets = [i for i, rate in enumerate(rates) if rate > 0]
-
     @cache
-    def find_max_pressure(i, time, opened = 0):
+    def find_max_pressure(i, targets, time):
         max_pressure = 0
         for j in targets:
             dt = tunnels[i][j] + 1
-            if (opened >> j) & 1 == 0 and dt <= time:
-                pressure = rates[j] * (time - dt) + find_max_pressure(j, time - dt, opened | (1 << j))
+            if dt <= time:
+                pressure = rates[j] * (time - dt) + find_max_pressure(j, tuple(k for k in targets if k != j), time - dt)
                 if pressure > max_pressure:
                     max_pressure = pressure
         return max_pressure
 
-    def find_max_pressure2(start, time):
+    def find_max_pressure2(start, targets, time):
         # Just loop over all ways to divide up the valves. This is super slow!
         # TODO: Maybe I'll revisit it some day (I won't)
         max_pressure = 0
-        for n in range(len(targets) // 2 + 1):
-            for subset in combinations(targets, n):
-                opened = 0
-                for i in subset:
-                    opened |= 1 << i
-                pressure = find_max_pressure(start, time, opened) + find_max_pressure(start, time, ~opened)
-                if pressure > max_pressure:
-                    max_pressure = pressure
+        for n in range(1 << (len(targets) - 1)):
+            A = tuple(x for i, x in enumerate(targets) if (n >> i) & 1 == 0)
+            B = tuple(x for i, x in enumerate(targets) if (n >> i) & 1 == 1)
+            pressure = find_max_pressure(start, A, time) + find_max_pressure(start, B, time)
+            if pressure > max_pressure:
+                max_pressure = pressure
         return max_pressure
 
-    yield find_max_pressure(valves.index('AA'), 30)
-    yield find_max_pressure2(valves.index('AA'), 26)
+    start = valves.index('AA')
+    targets = tuple(i for i, rate in enumerate(rates) if rate > 0)
+    yield find_max_pressure(start, targets, 30)
+    yield find_max_pressure2(start, targets, 26)
 
 if __name__ == '__main__':
     framework.main()
