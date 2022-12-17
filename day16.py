@@ -42,7 +42,7 @@ def solve(input, dot_path = None):
         for j in targets:
             dt = tunnels[i][j] + 1
             if dt <= time:
-                pressure = rates[j] * (time - dt) + find_max_pressure(j, tuple(k for k in targets if k != j), time - dt)
+                pressure = rates[j] * (time - dt) + find_max_pressure(j, targets - frozenset([j]), time - dt)
                 if pressure > max_pressure:
                     max_pressure = pressure
         return max_pressure
@@ -52,15 +52,14 @@ def solve(input, dot_path = None):
         # TODO: Maybe I'll revisit it some day (I won't)
         max_pressure = 0
         for n in range(1 << (len(targets) - 1)):
-            A = tuple(x for i, x in enumerate(targets) if (n >> i) & 1 == 0)
-            B = tuple(x for i, x in enumerate(targets) if (n >> i) & 1 == 1)
-            pressure = find_max_pressure(start, A, time) + find_max_pressure(start, B, time)
+            my_targets = frozenset(x for i, x in enumerate(targets) if (n >> i) & 1 == 1)
+            pressure = find_max_pressure(start, my_targets, time) + find_max_pressure(start, targets - my_targets, time)
             if pressure > max_pressure:
                 max_pressure = pressure
         return max_pressure
 
     start = valves.index('AA')
-    targets = tuple(i for i, rate in enumerate(rates) if rate > 0)
+    targets = frozenset(i for i, rate in enumerate(rates) if rate > 0)
     yield find_max_pressure(start, targets, 30)
     yield find_max_pressure2(start, targets, 26)
 
