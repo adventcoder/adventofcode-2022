@@ -1,14 +1,25 @@
 
 import framework
-from functools import reduce
-from math import lcm
-from collections import Counter
+from math import lcm, prod
+from collections import Counter, namedtuple
 
 def solve(input):
-    monkeys = tuple(map(Monkey, input.split('\n\n')))
+    monkeys = [parse_monkey(chunk) for chunk in input.split('\n\n')]
     yield monkey_business(monkeys, 20, lambda worry: worry // 3)
-    modulus = reduce(lcm, [monkey.test for monkey in monkeys], 1)
+    modulus = lcm(*(monkey.test for monkey in monkeys))
     yield monkey_business(monkeys, 10000, lambda worry: worry % modulus)
+
+Monkey = namedtuple('Monkey', ['starting_items', 'op', 'test', 'index_if_true', 'index_if_false'])
+
+def parse_monkey(chunk):
+    lines = chunk.splitlines()
+    values = [line.split(':', 2)[1] for line in lines[1 : ]]
+    starting_items = list(map(int, values[0].split(',')))
+    op = parse_op(values[1].split('=')[1])
+    test = int(values[2].split()[-1])
+    index_if_true = int(values[3].split()[-1])
+    index_if_false = int(values[4].split()[-1])
+    return Monkey(starting_items, op, test, index_if_true, index_if_false)
 
 def parse_op(expr):
     tokens = expr.split()
@@ -19,59 +30,40 @@ def parse_op(expr):
         x = int(tokens[2])
         return { '+': lambda old: old + x, '*': lambda old: old * x }[tokens[1]]
 
-class Monkey:
-    def __init__(self, chunk):
-        for line in chunk.splitlines():
-            label, value = line.lstrip().split(':', 2)
-            if label == 'Starting items':
-                self.starting_items = list(map(int, value.split(',')))
-            elif label == 'Operation':
-                self.op = parse_op(value.split('=')[1])
-            elif label == 'Test':
-                self.test = int(value.split()[-1])
-            elif label == 'If true':
-                self.index_if_true = int(value.split()[-1])
-            elif label == 'If false':
-                self.index_if_false = int(value.split()[-1])
-
-    def throw_index(self, item):
-        return self.index_if_true if item % self.test == 0 else self.index_if_false
-
 def monkey_business(monkeys, rounds, relief):
-    # TODO: clean this
-    def process(index, item):
-        seen = {}
-        counts = [Counter()]
-        for round in range(rounds):
-            key = (index, item)
-            if key in seen:
-                last_round = seen[(index, item)]
-                period = round - last_round
-                diff = counts[round] - counts[last_round]
-                final_counts = Counter()
-                for i in range(len(monkeys)):
-                    final_counts[i] = counts[(rounds - last_round) % period + last_round][i] + ((rounds - last_round) // period) * diff[i]
-                return final_counts
-            seen[key] = round
+    return prod(count for _, count in inspections(monkeys, rounds, relief).most_common(2))
 
-            counts.append(counts[-1].copy())
-            while True:
-                # An item can be processed multiple times in a single round if new index >= orig index
-                counts[-1][index] += 1
-                old_index = index
-                item = relief(monkeys[index].op(item))
-                index = monkeys[index].throw_index(item)
-                if index < old_index:
-                    break
-
-        return counts[-1]
-
-    total_counts = Counter()
+def inspections(monkeys, rounds, relief):
+    total = Counter()
     for index, monkey in enumerate(monkeys):
-        for item in monkey.starting_items:
-            total_counts += process(index, item)
-    s = sorted(total_counts.values(), reverse = True)
-    return s[0] * s[1]
+        for worry in monkey.starting_items:
+            total += item_inspections(monkeys, index, worry, rounds, relief)
+    return total
+
+def item_inspections(monkeys, index, worry, rounds, relief):
+    seen = {}
+    totals = [Counter()]
+    for round in range(rounds):
+        key = (index, worry)
+        if key in seen:
+            prev_round = seen[key]
+            q, r = divmod(rounds - prev_round, round - prev_round)
+            diffs = totals[round] - totals[prev_round]
+            for index in diffs:
+                diffs[index] *= q
+            return totals[prev_round + r] + diffs
+        seen[key] = round
+        counts = totals[-1].copy()
+        # It's possible for multiple monkeys to inspect an item in a single round as long as the item keeps being passed to a monkey with a higher index
+        prev_index = 0
+        while index >= prev_index:
+            monkey = monkeys[index]
+            counts[index] += 1
+            prev_index = index
+            worry = relief(monkey.op(worry))
+            index = monkey.index_if_true if worry % monkey.test == 0 else monkey.index_if_false
+        totals.append(counts)
+    return totals[rounds]
 
 if __name__ == '__main__':
     framework.main()
