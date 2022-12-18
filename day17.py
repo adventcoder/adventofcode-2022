@@ -20,14 +20,12 @@ def height_fast(jets, n):
         key = (chamber.rock_index, chamber.jet_index, *chamber.surface())
         if key in seen:
             prev_drops = seen[key]
-            q, r = divmod(n, drops - prev_drops)
-            return heights[r] + (heights[drops] - heights[prev_drops]) * q
+            q, r = divmod(n - prev_drops, drops - prev_drops)
+            return heights[r + prev_drops] + (heights[drops] - heights[prev_drops]) * q
         seen[key] = drops
         chamber.drop()
         drops += 1
         heights.append(chamber.height)
-    return chamber.height
-
 
 class Chamber:
     rocks = [

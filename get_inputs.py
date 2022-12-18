@@ -1,5 +1,5 @@
 
-import os, sys, time, argparse, urllib.request, re
+import os, sys, time, argparse, urllib.request, urllib.error, re
 from datetime import datetime, timezone, timedelta
 
 year = 2022
@@ -58,7 +58,7 @@ def get_input(day, args):
         print('Getting input for day', day)
         try:
             input = download_input(day, args)
-        except urllib.HTTPError as error:
+        except urllib.error.HTTPError as error:
             print('Failed!!!', error.status, error.reason)
         else:
             write(path, input)
