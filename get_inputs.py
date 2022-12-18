@@ -77,8 +77,8 @@ def get_answers(day, args):
         print('Getting answers for day', day)
         try:
             answers = download_answers(day, args)
-        except OSError as error:
-            print('Failed!!!', error)
+        except urllib.error.HTTPError as error:
+            print('Failed!!!', error.status, error.reason)
         else:
             if len(answers) == 0:
                 print('No answers found!')
