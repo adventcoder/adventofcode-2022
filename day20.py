@@ -1,25 +1,40 @@
 import framework
 
-# TODO: slow, tried linked list and it was slower
+# TODO: slow, naive delete/insert was a bit faster
 def solve(input):
     vals = [int(line) for line in input.splitlines()]
-    yield sum(coords(mix(vals)))
-    yield sum(coords(mix([val * 811589153 for val in vals], 10)))
+    yield sum(decrypt(vals))
+    yield sum(decrypt(vals, 811589153, 10))
 
-def coords(vals):
-    i = vals.index(0)
-    return (vals[(i + n) % len(vals)] for n in (1000, 2000, 3000))
-
-def mix(vals, reps = 1):
-    indexes = list(range(len(vals)))
+def decrypt(vals, key = 1, reps = 1):
+    prev = [(i - 1) % len(vals) for i in range(len(vals))]
+    next = [(i + 1) % len(vals) for i in range(len(vals))]
     for _ in range(reps):
-        for index in range(len(vals)):
-            move(indexes, indexes.index(index), vals[index])
-    return [vals[index] for index in indexes]
+        for i, val in enumerate(vals):
+            move(prev, next, i, val * key, len(vals))
+    coords = []
+    i = vals.index(0)
+    for _ in range(3):
+        i = go(i, next, 1000)
+        coords.append(vals[i] * key)
+    return coords
 
-def move(vals, i, n):
-    val = vals.pop(i)
-    vals.insert((i + n) % len(vals), val)
+def move(prev, next, i, n, m):
+    prev[next[i]] = prev[i]
+    next[prev[i]] = next[i]
+    n %= (m - 1)
+    if n <= m - 1 - n:
+        prev[i] = go(prev[i], next, n)
+    else:
+        prev[i] = go(prev[i], prev, m - 1 - n)
+    next[i] = next[prev[i]]
+    prev[next[i]] = i
+    next[prev[i]] = i
+
+def go(i, next, n):
+    for _ in range(n):
+        i = next[i]
+    return i
 
 if __name__ == '__main__':
     framework.main()
