@@ -1,57 +1,53 @@
 import framework
-from operator import add, sub, mul
-
-def safediv(x, y):
-    assert x % y == 0
-    return x // y
+from operator import *
 
 def flip(op):
     return lambda x, y: op(y, x)
 
-ops = { '+': add, '-': sub, '*': mul, '/': safediv }
-left_inverse = { '+': sub, '-': add, '*': safediv, '/': mul }
-right_inverse = { '+': sub, '-': flip(sub), '*': safediv, '/': flip(safediv) }
+ops = { '+': add, '-': sub, '*': mul, '/': floordiv }
+left_inverse = { '+': sub, '-': add, '*': floordiv, '/': mul }
+right_inverse = { '+': sub, '-': flip(sub), '*': floordiv, '/': flip(floordiv) }
 
 def solve(input):
-    jobs = parse_jobs(input)
-    yield speak('root', jobs)
-    yield reverse_speak('humn', jobs, reverse(jobs))
+    monkeys = parse_monkeys(input)
+    yield speak('root', monkeys)
+    yield reverse_speak('humn', monkeys, reverse(monkeys))
 
-def parse_jobs(input):
-    jobs = {}
+def parse_monkeys(input):
+    monkeys = {}
     for line in input.splitlines():
-        key, value = line.split(':')
-        tokens = value.split()
-        jobs[key.strip()] = int(tokens[0]) if len(tokens) == 1 else tokens
-    return jobs
+        name, expr = line.split(':')
+        tokens = expr.split()
+        monkeys[name] = int(tokens[0]) if len(tokens) == 1 else tokens
+    return monkeys
 
-def speak(name, jobs):
-    job = jobs[name]
-    if isinstance(job, int):
-        return job
+def speak(name, monkeys):
+    monkey = monkeys[name]
+    if isinstance(monkey, int):
+        return monkey
     else:
-        left, opname, right = job
-        return ops[opname](speak(left, jobs), speak(right, jobs))
+        left, opname, right = monkey
+        return ops[opname](speak(left, monkeys), speak(right, monkeys))
 
-def reverse_speak(name, jobs, parents):
+def reverse_speak(name, monkeys, parents):
     parent = parents[name]
-    left, opname, right = jobs[parent]
+    left, opname, right = monkeys[parent]
     if parent == 'root':
         if name == left:
-            return speak(right, jobs)
+            return speak(right, monkeys)
         elif name == right:
-            return speak(left, jobs)
+            return speak(left, monkeys)
     else:
         if name == left:
-            return left_inverse[opname](reverse_speak(parent, jobs, parents), speak(right, jobs))
+            return left_inverse[opname](reverse_speak(parent, monkeys, parents), speak(right, monkeys))
         elif name == right:
-            return right_inverse[opname](reverse_speak(parent, jobs, parents), speak(left, jobs))
+            return right_inverse[opname](reverse_speak(parent, monkeys, parents), speak(left, monkeys))
 
-def reverse(jobs):
+def reverse(monkeys):
     parents = {}
-    for name, job in jobs.items():
-        if not isinstance(job, int):
-            left, _, right = job
+    for name, monkey in monkeys.items():
+        if not isinstance(monkey, int):
+            left, _, right = monkey
             parents[left] = name
             parents[right] = name
     return parents
