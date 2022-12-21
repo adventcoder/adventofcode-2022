@@ -3,7 +3,6 @@ import re
 from math import *
 from collections import defaultdict
 
-# TODO: this could be a bit faster maybe.
 def solve(input):
     blueprints = [Blueprint(line) for line in input.splitlines()]
     yield sum(blueprint.num * astar(24, blueprint) for blueprint in blueprints)
@@ -47,6 +46,7 @@ class State:
         return (self.resources[:3], self.robots, self.time)
 
     def heuristic(self):
+        # TODO: it'd be nice if this could take other resources into account.
         return self.resources[3] + self.robots[3] * self.time + self.time*(self.time-1)//2
 
     def neighbours(self, blueprint):

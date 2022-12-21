@@ -32,36 +32,37 @@ def solve(input):
     targets = [i for i, rate in enumerate(rates) if rate > 0]
 
     @cache
-    def find_candidate_paths(i, visited, time):
-        paths = [(0, 0)]
+    def find_best_path(i, time, visited = 0):
+        max_pressure = 0
         for j in targets:
             dt = tunnels[i][j] + 1
             if dt < time and not (visited >> j) & 1:
-                for pressure, opened in find_candidate_paths(j, visited | (1 << j), time - dt):
-                    paths.append((pressure + rates[j] * (time - dt), opened | (1 << j)))
-        return nlargest(1000, paths)
-
-    def find_max_pressure1(start, time):
-        max_pressure = 0
-        for pressure, opened in find_candidate_paths(start, 0, time):
-            if pressure > max_pressure:
-                # print('pressure:', pressure, 'opened:', bin(opened))
-                max_pressure = pressure
+                pressure = rates[j] * (time - dt) + find_best_path(j, time - dt, visited | (1 << j))
+                max_pressure = max(pressure, max_pressure)
         return max_pressure
 
-    def find_max_pressure2(start, time):
+    def find_best_path2(i, time):
         max_pressure = 0
-        for pressure1, opened1 in find_candidate_paths(start, 0, time):
-            for pressure2, opened2 in find_candidate_paths(start, opened1, time):
-                pressure = pressure1 + pressure2
-                if pressure > max_pressure:
-                    # print('pressure:', pressure, 'opened1:', bin(opened1), 'opened2:', bin(opened2))
-                    max_pressure = pressure
+        for size in range(len(targets) // 2):
+            for path, pressure in find_all_paths(i, time, size):
+                max_pressure = max(pressure + find_best_path(i, time, path), max_pressure)
         return max_pressure
 
+    @cache
+    def find_all_paths(i, time, size, visited = 0):
+        if size == 0:
+            yield 0, 0
+        else:
+            for j in targets:
+                dt = tunnels[i][j] + 1
+                if dt < time and not (visited >> j) & 1:
+                    for path, pressure in find_all_paths(j, time - dt, size - 1, visited | (1 << j)):
+                        yield path | (1 << j), pressure + rates[j] * (time - dt)
+
+    # TODO: This is not great and super slow.
     start = valves.index('AA')
-    yield find_max_pressure1(start, 30)
-    yield find_max_pressure2(start, 26)
+    yield find_best_path(start, 30)
+    yield find_best_path2(start, 26)
 
 if __name__ == '__main__':
     framework.main()
