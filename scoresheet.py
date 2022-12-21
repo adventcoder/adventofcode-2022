@@ -1,10 +1,6 @@
 
-import importlib, argparse, sys, os, time, re
+import argparse, sys, os, time, re, importlib.util
 from math import floor
-
-inputs_dirname = 'inputs'
-input_name_pattern = r'day(\d+).txt'
-answers_name_pattern = r'day(\d+)_answers.txt'
 
 def main():
     try:
@@ -18,20 +14,25 @@ def parse_args():
     return parser.parse_args()
 
 def scoresheet(args):
-    print("--- Advent of Code Year 2022 ---")
-    print()
+    puzzles = load_puzzles(args)
     total_stars = 0
     total_time = 0
-    for day, input, answers in get_test_data(args):
-        mod = importlib.import_module('day{}'.format(day))
-        print("Day {}: ".format(str(day).rjust(2)), end = '', flush = True)
-        stars, time = test(mod.solve, input, answers)
-        print(" {}/{} [{}]".format(stars, len(answers), format_time(time)))
-        total_stars += stars
-        total_time += time
+    print("--- Advent of Code Year 2022 ---")
     print()
+    if puzzles:
+        for day in sorted(puzzles.keys()):
+            mod, input, answers = puzzles[day]
+            print("Day {}: ".format(str(day).rjust(2)), end = '', flush = True)
+            stars, time = test(mod.solve, input, answers)
+            print(" {}/{} [{}]".format(stars, len(answers), format_time(time)))
+            total_stars += stars
+            total_time += time
+        print()
     print("Total stars:", total_stars)
     print("Total time:", format_time(total_time))
+    if len(puzzles) == 25:
+        print()
+        print("Merry Christmas :)")
 
 def test(solver, input, answers):
     stars = 0
@@ -42,17 +43,17 @@ def test(solver, input, answers):
         try:
             attempt = next(attempts)
         except StopIteration:
-            print('.', end = '', flush = True)
+            print('.', end = '')
         except Exception:
-            print('!', end = '', flush = True)
+            print('!', end = '')
         else:
             total_time += time.perf_counter() - start_time
             start_time = time.perf_counter()
             if str(attempt) == answer:
-                print('*', end = '', flush = True)
+                print('*', end = '')
                 stars += 1
             else:
-                print('X', end = '', flush = True)
+                print('X', end = '')
     return stars, total_time
 
 def format_time(time):
@@ -66,24 +67,27 @@ def format_time(time):
     parts.append('%.3f ms' % milliseconds)
     return ' '.join(parts)
 
-def get_test_data(args):
-    input_paths = {}
-    answers_paths = {}
-    if args.bigboy:
-        raise NotImplementedError()
-    else:
-        for name in os.listdir(inputs_dirname):
-            path = os.path.join(inputs_dirname, name)
-            if match := re.fullmatch(input_name_pattern, name):
-                input_paths[int(match.group(1))] = path
-            elif match := re.fullmatch(answers_name_pattern, name):
-                answers_paths[int(match.group(1))] = path
-    data = []
-    for day in sorted(input_paths.keys() & answers_paths.keys()):
-        input = read(input_paths[day])
-        answers = read(answers_paths[day]).splitlines()
-        data.append((day, input, answers))
-    return data
+def load_puzzles(args):
+    puzzles = {}
+    inputs_dirname = 'bigboy_inputs' if args.bigboy else 'inputs'
+    for name in os.listdir('.'):
+        path = os.path.join('.', name)
+        if match := re.fullmatch(r'day(\d+).py', name):
+            day = int(match.group(1))
+            input_path = os.path.join(inputs_dirname, 'day{}.txt'.format(day))
+            answers_path = os.path.join(inputs_dirname, 'day{}_answers.txt'.format(day))
+            if os.path.exists(input_path) and os.path.exists(answers_path):
+                mod = load_module(os.path.splitext(name)[0], path)
+                input = read(input_path)
+                answers = read(answers_path).splitlines()
+                puzzles[day] = (mod, input, answers)
+    return puzzles
+
+def load_module(name, path):
+    spec = importlib.util.spec_from_file_location(name, path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
 
 def read(path):
     with open(path, 'r', encoding = 'utf8') as file:
