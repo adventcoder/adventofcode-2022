@@ -32,7 +32,10 @@ def move(prev, next, i, n, m):
     next[prev[i]] = i
 
 def go(i, next, n):
-    for _ in range(n):
+    q, r = divmod(n, 8)
+    for _ in range(q):
+        i = next[next[next[next[next[next[next[next[i]]]]]]]]
+    for _ in range(r):
         i = next[i]
     return i
 
