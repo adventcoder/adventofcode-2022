@@ -1,6 +1,7 @@
 import framework
 import re
 from math import *
+from collections import defaultdict
 
 # TODO: this could be a bit faster maybe.
 def solve(input):
@@ -18,30 +19,23 @@ def astar(time, blueprint):
     start = State((0, 0, 0, 0), (1, 0, 0, 0), time)
     best = {}
     best[start.key()] = start
-    queue = {}
-    push(queue, start)
+    queue = defaultdict(list)
+    max_score = start.heuristic()
+    queue[max_score].append(start)
     while queue:
-        curr = pop(queue)
+        curr = queue[max_score].pop()
+        if not queue[max_score]:
+            del queue[max_score]
+            max_score = max(queue.keys()) if queue else 0
         if curr.time == 0:
             return curr.resources[3]
         for next in curr.neighbours(blueprint):
             key = next.key()
             if key not in best or next.resources[3] > best[key].resources[3]:
                 best[key] = next
-                push(queue, next)
-
-def push(queue, state):
-    score = state.heuristic()
-    if score not in queue:
-        queue[score] = set()
-    queue[score].add(state)
-
-def pop(queue):
-    max_score = max(queue.keys())
-    state = queue[max_score].pop()
-    if not queue[max_score]:
-        del queue[max_score]
-    return state
+                score = next.heuristic()
+                queue[score].append(next)
+                max_score = max(score, max_score)
 
 class State:
     def __init__(self, resources, robots, time):
@@ -76,7 +70,7 @@ class State:
                 if self.robots[j] == 0:
                     return inf
                 time = ceil((blueprint.costs[i][j] - self.resources[j]) / self.robots[j])
-                max_time = max(max_time, time)
+                max_time = max(time, max_time)
         return max_time
 
     def wait(self):
