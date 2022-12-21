@@ -39,7 +39,7 @@ def solve(input):
             if dt < time and not (visited >> j) & 1:
                 for pressure, opened in find_candidate_paths(j, visited | (1 << j), time - dt):
                     paths.append((pressure + rates[j] * (time - dt), opened | (1 << j)))
-        return nlargest(10, paths)
+        return nlargest(1000, paths)
 
     def find_max_pressure1(start, time):
         max_pressure = 0
