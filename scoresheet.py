@@ -19,15 +19,14 @@ def scoresheet(args):
     total_time = 0
     print("--- Advent of Code Year 2022 ---")
     print()
-    if puzzles:
-        for day in sorted(puzzles.keys()):
-            mod, input, answers = puzzles[day]
-            print("Day {}: ".format(str(day).rjust(2)), end = '', flush = True)
-            stars, time = test(mod.solve, input, answers)
-            print(" {}/{} [{}]".format(stars, len(answers), format_time(time)))
-            total_stars += stars
-            total_time += time
-        print()
+    for day in sorted(puzzles.keys()):
+        mod, input, answers = puzzles[day]
+        print("Day {}: ".format(str(day).rjust(2)), end = '', flush = True)
+        stars, time = test(mod.solve, input, answers)
+        print(" {}/{} [{}]".format(stars, len(answers), format_time(time)))
+        total_stars += stars
+        total_time += time
+    print()
     print("Total stars:", total_stars)
     print("Total time:", format_time(total_time))
     if len(puzzles) == 25:

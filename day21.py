@@ -1,12 +1,22 @@
 import framework
 from operator import *
+from collections import namedtuple
 
 def flip(op):
     return lambda x, y: op(y, x)
 
-ops = { '+': add, '-': sub, '*': mul, '/': floordiv }
-left_inverse = { '+': sub, '-': add, '*': floordiv, '/': mul }
-right_inverse = { '+': sub, '-': flip(sub), '*': floordiv, '/': flip(floordiv) }
+Operator = namedtuple('Operator', ['apply', 'left_inv', 'right_inv'])
+
+operators = {
+    '+': Operator(add, sub, sub),
+    '-': Operator(sub, add, flip(sub)),
+    '*': Operator(mul, floordiv, floordiv),
+    '/': Operator(floordiv, mul, flip(floordiv))
+}
+
+Const = namedtuple('Const', ['value'])
+Expr = namedtuple('Expr', ['left', 'op', 'right'])
+Monkey = Expr | Const
 
 def solve(input):
     monkeys = parse_monkeys(input)
@@ -18,39 +28,42 @@ def parse_monkeys(input):
     for line in input.splitlines():
         name, expr = line.split(':')
         tokens = expr.split()
-        monkeys[name] = int(tokens[0]) if len(tokens) == 1 else tokens
+        if len(tokens) == 1:
+            monkeys[name] = Const(int(tokens[0]))
+        else:
+            monkeys[name] = Expr(tokens[0], operators.get(tokens[1]), tokens[2])
     return monkeys
 
-def speak(name, monkeys):
-    monkey = monkeys[name]
-    if isinstance(monkey, int):
-        return monkey
-    else:
-        left, opname, right = monkey
-        return ops[opname](speak(left, monkeys), speak(right, monkeys))
-
-def should_say(name, monkeys, parents):
-    parent = parents[name]
-    left, opname, right = monkeys[parent]
-    if parent == 'root':
-        if name == left:
-            return speak(right, monkeys)
-        elif name == right:
-            return speak(left, monkeys)
-    else:
-        if name == left:
-            return left_inverse[opname](should_say(parent, monkeys, parents), speak(right, monkeys))
-        elif name == right:
-            return right_inverse[opname](should_say(parent, monkeys, parents), speak(left, monkeys))
-
 def reverse(monkeys):
-    parents = {}
+    parent_names = {}
     for name, monkey in monkeys.items():
-        if not isinstance(monkey, int):
-            left, _, right = monkey
-            parents[left] = name
-            parents[right] = name
-    return parents
+        match monkey:
+            case Expr(left, _, right):
+                parent_names[left] = name
+                parent_names[right] = name
+    return parent_names
+
+def speak(name, monkeys):
+    match monkeys[name]:
+        case Const(value):
+            return value
+        case Expr(left, op, right):
+            return op.apply(speak(left, monkeys), speak(right, monkeys))
+
+def should_say(name, monkeys, parent_names):
+    parent_name = parent_names[name]
+    parent = monkeys[parent_name]
+    if parent_name == 'root':
+        if name == parent.left:
+            return speak(parent.right, monkeys)
+        elif name == parent.right:
+            return speak(parent.left, monkeys)
+    else:
+        answer = should_say(parent_name, monkeys, parent_names)
+        if name == parent.left:
+            return parent.op.left_inv(answer, speak(parent.right, monkeys))
+        elif name == parent.right:
+            return parent.op.right_inv(answer, speak(parent.left, monkeys))
 
 if __name__ == '__main__':
     framework.main()
