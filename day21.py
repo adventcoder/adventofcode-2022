@@ -11,7 +11,7 @@ right_inverse = { '+': sub, '-': flip(sub), '*': floordiv, '/': flip(floordiv) }
 def solve(input):
     monkeys = parse_monkeys(input)
     yield speak('root', monkeys)
-    yield reverse_speak('humn', monkeys, reverse(monkeys))
+    yield should_say('humn', monkeys, reverse(monkeys))
 
 def parse_monkeys(input):
     monkeys = {}
@@ -29,7 +29,7 @@ def speak(name, monkeys):
         left, opname, right = monkey
         return ops[opname](speak(left, monkeys), speak(right, monkeys))
 
-def reverse_speak(name, monkeys, parents):
+def should_say(name, monkeys, parents):
     parent = parents[name]
     left, opname, right = monkeys[parent]
     if parent == 'root':
@@ -39,9 +39,9 @@ def reverse_speak(name, monkeys, parents):
             return speak(left, monkeys)
     else:
         if name == left:
-            return left_inverse[opname](reverse_speak(parent, monkeys, parents), speak(right, monkeys))
+            return left_inverse[opname](should_say(parent, monkeys, parents), speak(right, monkeys))
         elif name == right:
-            return right_inverse[opname](reverse_speak(parent, monkeys, parents), speak(left, monkeys))
+            return right_inverse[opname](should_say(parent, monkeys, parents), speak(left, monkeys))
 
 def reverse(monkeys):
     parents = {}
