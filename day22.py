@@ -9,15 +9,14 @@ tile_height = 50
 def solve(input):
     chunks = input.split('\n\n')
     grid = [list(line) for line in chunks[0].splitlines()]
-    path = parse_path(chunks[1])
-    #yield password(grid, path, wrap1)
+    path = [int(token) if token.isdigit() else token for token in re.findall(r'\d+|L|R', chunks[1].strip())]
+    yield password(grid, path, wrap1)
     yield password(grid, path, wrap2)
 
-def parse_path(chunk):
-    return (int(token) if token.isdigit() else token for token in re.findall(r'\d+|L|R', chunk.strip()))
-
 def password(grid, path, wrap):
-    x, y, d = wrap1(grid, len(grid[0]) - 1, 0, 0)
+    x = grid[0].index('.')
+    y = 0
+    d = 0
     for arg in path:
         if arg == 'L':
             d = (d - 1) % len(facings)
@@ -30,9 +29,7 @@ def password(grid, path, wrap):
                 next_y = y + dy
                 next_d = d
                 if not in_bounds(grid, next_x, next_y):
-                    print(f'pre wrap: ({x}, {y}, {d})')
                     next_x, next_y, next_d = wrap(grid, x, y, d)
-                    print(f'post wrap: ({next_x}, {next_y}, {next_d})')
                 if grid[next_y][next_x] == '#':
                     break
                 x, y, d = next_x, next_y, next_d
@@ -43,7 +40,7 @@ def in_bounds(grid, x, y):
 
 def wrap1(grid, x, y, d):
     dx, dy = facings[d]
-    # Loop over tiles instead of individual pixels
+    # loop over tiles instead of individual pixels
     tile_xcount = len(grid[y]) // tile_width
     tile_ycount = len(grid) // tile_height
     x = (x + dx) % len(grid[y])
@@ -55,7 +52,6 @@ def wrap1(grid, x, y, d):
         tile_y = (tile_y + dy) % tile_ycount
     return tile_x * tile_width + ox, tile_y * tile_height + oy, d
 
-# right, down, left, up
 def wrap2(grid, x, y, d):
     # TODO: not hardcode this (never going to happen)
     tile_x, ox = divmod(x, tile_width)
@@ -69,7 +65,7 @@ def wrap2(grid, x, y, d):
         if d == 0:
             return (2 * tile_width - 1, 3 * tile_height - 1 - oy, 2)
         elif d == 1:
-            return (2 * tile_width - 1, tile_height + oy, 2)
+            return (2 * tile_width - 1, tile_height + ox, 2)
         elif d == 3:
             return (ox, 4 * tile_height - 1, 3)
     elif tile_x == 1 and tile_y == 1:
