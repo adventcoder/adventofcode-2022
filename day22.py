@@ -40,17 +40,12 @@ def in_bounds(grid, x, y):
 
 def wrap1(grid, x, y, d):
     dx, dy = facings[d]
-    # loop over tiles instead of individual pixels
-    tile_xcount = len(grid[y]) // tile_width
-    tile_ycount = len(grid) // tile_height
-    x = (x + dx) % len(grid[y])
+    x = (x + dx) % len(grid[0])
     y = (y + dy) % len(grid)
-    tile_x, ox = divmod(x, tile_width)
-    tile_y, oy = divmod(y, tile_height)
-    while not in_bounds(grid, tile_x * tile_width, tile_y * tile_height):
-        tile_x = (tile_x + dx) % tile_xcount
-        tile_y = (tile_y + dy) % tile_ycount
-    return tile_x * tile_width + ox, tile_y * tile_height + oy, d
+    while not in_bounds(grid, x, y):
+        x = (x + dx * tile_width) % len(grid[0])
+        y = (y + dy * tile_height) % len(grid)
+    return x, y, d
 
 def wrap2(grid, x, y, d):
     # TODO: not hardcode this (never going to happen)
