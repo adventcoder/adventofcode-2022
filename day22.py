@@ -2,9 +2,27 @@ import framework
 import re
 
 facings = [(1, 0), (0, 1), (-1, 0), (0, -1)]
+R, D, L, U = range(len(facings))
 
-tile_width = 50
-tile_height = 50
+tile_size = 50
+
+# TODO: not hardcode this
+net = {
+    (1, 0, L): (0, 2, R),
+    (1, 0, U): (0, 3, R),
+    (2, 0, R): (1, 2, L),
+    (2, 0, D): (1, 1, L),
+    (2, 0, U): (0, 3, U),
+    (1, 1, R): (2, 0, U),
+    (1, 1, L): (0, 2, D),
+    (0, 2, L): (1, 0, R),
+    (0, 2, U): (1, 1, R),
+    (1, 2, R): (2, 0, L),
+    (1, 2, D): (0, 3, L),
+    (0, 3, R): (1, 2, U),
+    (0, 3, D): (2, 0, D),
+    (0, 3, L): (1, 0, D)
+}
 
 def solve(input):
     chunks = input.split('\n\n')
@@ -29,7 +47,9 @@ def password(grid, path, wrap):
                 next_y = y + dy
                 next_d = d
                 if not in_bounds(grid, next_x, next_y):
+                    # print(f"pre wrap: {x} {y} {d}")
                     next_x, next_y, next_d = wrap(grid, x, y, d)
+                    # print(f"post wrap: {next_x} {next_y} {next_d}")
                 if grid[next_y][next_x] == '#':
                     break
                 x, y, d = next_x, next_y, next_d
@@ -43,49 +63,42 @@ def wrap1(grid, x, y, d):
     x = (x + dx) % len(grid[0])
     y = (y + dy) % len(grid)
     while not in_bounds(grid, x, y):
-        x = (x + dx * tile_width) % len(grid[0])
-        y = (y + dy * tile_height) % len(grid)
+        x = (x + dx * tile_size) % len(grid[0])
+        y = (y + dy * tile_size) % len(grid)
     return x, y, d
 
 def wrap2(grid, x, y, d):
-    # TODO: not hardcode this (never going to happen)
-    tile_x, ox = divmod(x, tile_width)
-    tile_y, oy = divmod(y, tile_height)
-    if tile_x == 1 and tile_y == 0:
-        if d == 2:
-            return (0, 3 * tile_height - 1 - oy, 0)
-        elif d == 3:
-            return (0, 3 * tile_height + ox, 0)
-    elif tile_x == 2 and tile_y == 0:
-        if d == 0:
-            return (2 * tile_width - 1, 3 * tile_height - 1 - oy, 2)
-        elif d == 1:
-            return (2 * tile_width - 1, tile_height + ox, 2)
-        elif d == 3:
-            return (ox, 4 * tile_height - 1, 3)
-    elif tile_x == 1 and tile_y == 1:
-        if d == 0:
-            return (2 * tile_width + oy, tile_height - 1, 3)
-        elif d == 2:
-            return (oy, 2 * tile_height, 1)
-    elif tile_x == 0 and tile_y == 2:
-        if d == 2:
-            return (tile_width, tile_height - 1 - oy, 0)
-        elif d == 3:
-            return (tile_width, tile_height + ox, 0)
-    elif tile_x == 1 and tile_y == 2:
-        if d == 0:
-            return (3 * tile_width - 1, tile_height - 1 - oy, 2)
-        elif d == 1:
-            return (tile_width - 1, 3 * tile_height + ox, 2)
-    elif tile_x == 0 and tile_y == 3:
-        if d == 0:
-            return (tile_width + oy, 3 * tile_height - 1, 3)
-        elif d == 1:
-            return (2 * tile_width + ox, 0, 1)
-        elif d == 2:
-            return (tile_width + oy, 0, 1)
-    assert False
+    tile_x, x = divmod(x, tile_size)
+    tile_y, y = divmod(y, tile_size)
+    new_tile_x, new_tile_y, new_d = net[(tile_x, tile_y, d)]
+
+    if d == R:
+        assert x == tile_size - 1
+        i = y
+    elif d == D:
+        assert y == tile_size - 1
+        i = tile_size - 1 - x
+    elif d == L:
+        assert x == 0
+        i = tile_size - 1 - y
+    elif d == U:
+        assert y == 0
+        i = x
+
+    if new_d == R:
+        new_x = 0
+        new_y = i
+    elif new_d == D:
+        new_x = tile_size - 1 - i
+        new_y = 0
+    elif new_d == L:
+        new_x = tile_size - 1
+        new_y = tile_size - 1 - i
+    elif new_d == U:
+        new_x = i
+        new_y = tile_size - 1
+
+    return new_tile_x * tile_size + new_x, new_tile_y * tile_size + new_y, new_d
 
 if __name__ == '__main__':
     framework.main()
