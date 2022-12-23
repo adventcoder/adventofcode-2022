@@ -6,49 +6,31 @@ R, D, L, U = range(len(facings))
 
 tile_size = 50
 
-# TODO: not hardcode this
-net = {
-    (1, 0, L): (0, 2, R),
-    (1, 0, U): (0, 3, R),
-    (2, 0, R): (1, 2, L),
-    (2, 0, D): (1, 1, L),
-    (2, 0, U): (0, 3, U),
-    (1, 1, R): (2, 0, U),
-    (1, 1, L): (0, 2, D),
-    (0, 2, L): (1, 0, R),
-    (0, 2, U): (1, 1, R),
-    (1, 2, R): (2, 0, L),
-    (1, 2, D): (0, 3, L),
-    (0, 3, R): (1, 2, U),
-    (0, 3, D): (2, 0, D),
-    (0, 3, L): (1, 0, D)
-}
-
 def solve(input):
     chunks = input.split('\n\n')
     grid = [list(line) for line in chunks[0].splitlines()]
     path = [int(token) if token.isdigit() else token for token in re.findall(r'\d+|L|R', chunks[1].strip())]
-    yield password(grid, path, wrap1)
-    yield password(grid, path, wrap2)
+    yield password(grid, path, find_edges1(grid))
+    yield password(grid, path, find_edges2(grid))
 
-def password(grid, path, wrap):
+def password(grid, path, edges):
     x = grid[0].index('.')
     y = 0
     d = 0
-    for arg in path:
-        if arg == 'L':
+    for n in path:
+        if n == 'L':
             d = (d - 1) % len(facings)
-        elif arg == 'R':
+        elif n == 'R':
             d = (d + 1) % len(facings)
         else:
-            for _ in range(arg):
+            for _ in range(n):
                 dx, dy = facings[d]
                 next_x = x + dx
                 next_y = y + dy
                 next_d = d
                 if not in_bounds(grid, next_x, next_y):
                     # print(f"pre wrap: {x} {y} {d}")
-                    next_x, next_y, next_d = wrap(grid, x, y, d)
+                    next_x, next_y, next_d = wrap(x, y, d, edges)
                     # print(f"post wrap: {next_x} {next_y} {next_d}")
                 if grid[next_y][next_x] == '#':
                     break
@@ -58,19 +40,10 @@ def password(grid, path, wrap):
 def in_bounds(grid, x, y):
     return 0 <= y < len(grid) and 0 <= x < len(grid[y]) and grid[y][x] != ' '
 
-def wrap1(grid, x, y, d):
-    dx, dy = facings[d]
-    x = (x + dx) % len(grid[0])
-    y = (y + dy) % len(grid)
-    while not in_bounds(grid, x, y):
-        x = (x + dx * tile_size) % len(grid[0])
-        y = (y + dy * tile_size) % len(grid)
-    return x, y, d
-
-def wrap2(grid, x, y, d):
+def wrap(x, y, d, edges):
     tile_x, x = divmod(x, tile_size)
     tile_y, y = divmod(y, tile_size)
-    new_tile_x, new_tile_y, new_d = net[(tile_x, tile_y, d)]
+    new_tile_x, new_tile_y, new_d = edges[(tile_x, tile_y, d)]
 
     if d == R:
         assert x == tile_size - 1
@@ -99,6 +72,41 @@ def wrap2(grid, x, y, d):
         new_y = tile_size - 1
 
     return new_tile_x * tile_size + new_x, new_tile_y * tile_size + new_y, new_d
+
+def find_edges1(grid):
+    x_tiles = max(map(len, grid)) // tile_size
+    y_tiles = len(grid) // tile_size
+    edges = {}
+    for y in range(y_tiles):
+        x_min = next(x for x in range(x_tiles) if in_bounds(grid, x * tile_size, y * tile_size))
+        x_max = next(x for x in reversed(range(x_tiles)) if in_bounds(grid, x * tile_size, y * tile_size))
+        edges[(x_min, y, L)] = (x_max, y, L)
+        edges[(x_max, y, R)] = (x_min, y, R)
+    for x in range(x_tiles):
+        y_min = next(y for y in range(y_tiles) if in_bounds(grid, x * tile_size, y * tile_size))
+        y_max = next(y for y in reversed(range(y_tiles)) if in_bounds(grid, x * tile_size, y * tile_size))
+        edges[(x, y_min, U)] = (x, y_max, U)
+        edges[(x, y_max, D)] = (x, y_min, D)
+    return edges
+
+def find_edges2(grid):
+    # TODO: not hardcode this
+    return {
+        (1, 0, L): (0, 2, R),
+        (1, 0, U): (0, 3, R),
+        (2, 0, R): (1, 2, L),
+        (2, 0, D): (1, 1, L),
+        (2, 0, U): (0, 3, U),
+        (1, 1, R): (2, 0, U),
+        (1, 1, L): (0, 2, D),
+        (0, 2, L): (1, 0, R),
+        (0, 2, U): (1, 1, R),
+        (1, 2, R): (2, 0, L),
+        (1, 2, D): (0, 3, L),
+        (0, 3, R): (1, 2, U),
+        (0, 3, D): (2, 0, D),
+        (0, 3, L): (1, 0, D)
+    }
 
 if __name__ == '__main__':
     framework.main()
