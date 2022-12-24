@@ -1,19 +1,38 @@
 import framework
 from math import *
-from heapq import *
-from collections import deque
 
 def solve(input):
-    grid = [list(line) for line in input.splitlines()]
+    grid = input.splitlines()
+    grids = superpositions(grid)
     start = (grid[0].index('.'), 0)
     end = (grid[-1].index('.'), len(grid) - 1)
-    time = find_path(grid, start, end)
+    time = find_path(grids, start, end)
     yield time
-    time = find_path(grid, end, start, time)
-    time = find_path(grid, start, end, time)
+    time = find_path(grids, end, start, time)
+    time = find_path(grids, start, end, time)
     yield time
 
-def find_path(grid, start, end, start_time = 0):
+def superpositions(grid):
+    inner_width = len(grid[0]) - 2
+    inner_height = len(grid) - 2
+    depth = lcm(inner_width, inner_height)
+    grids = [[['.'] * len(row) for row in grid] for _ in range(depth)]
+    for i in range(depth):
+        for y, row in enumerate(grid):
+            for x, c in enumerate(row):
+                if c == '#':
+                    grids[i][y][x] = '#'
+                elif c == '>':
+                    grids[i][y][(x - 1 + i) % inner_width + 1] = '#'
+                elif c == '<':
+                    grids[i][y][(x - 1 - i) % inner_width + 1] = '#'
+                elif c == 'v':
+                    grids[i][(y - 1 + i) % inner_height + 1][x] = '#'
+                elif c == '^':
+                    grids[i][(y - 1 - i) % inner_height + 1][x] = '#'
+    return grids
+
+def find_path(grids, start, end, start_time = 0):
     curr = set([start])
     time = start_time
     while curr:
@@ -21,40 +40,21 @@ def find_path(grid, start, end, start_time = 0):
         for pos in curr:
             if pos == end:
                 return time
-            for new_pos in neighbours(grid, pos):
-                if new_pos not in next and not collision(grid, new_pos, time + 1):
+            i = (time + 1) % len(grids)
+            for new_pos in neighbours(pos, len(grids[i])):
+                if grids[i][new_pos[1]][new_pos[0]] == '.':
                     next.add(new_pos)
         curr = next
         time += 1
 
-def collision(grid, pos, time):
-    x, y = pos
-    if grid[y][x] == '#':
-        return True
-    if grid[y][wrapx(x - time, grid)] == '>':
-        return True
-    if grid[y][wrapx(x + time, grid)] == '<':
-        return True
-    if grid[wrapy(y - time, grid)][x] == 'v':
-        return True
-    if grid[wrapy(y + time, grid)][x] == '^':
-        return True
-    return False
-
-def wrapx(x, grid):
-    return (x - 1) % (len(grid[0]) - 2) + 1
-
-def wrapy(y, grid):
-    return (y - 1) % (len(grid) - 2) + 1
-
-def neighbours(grid, pos):
+def neighbours(pos, height):
     x, y = pos
     yield x, y # wait
     if y > 0:
         yield x, y - 1
     yield x - 1, y
     yield x + 1, y
-    if y < len(grid) - 1:
+    if y < height - 1:
         yield x, y + 1
 
 if __name__ == '__main__':
