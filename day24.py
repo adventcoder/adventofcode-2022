@@ -1,6 +1,7 @@
 import framework
 from math import *
 from heapq import *
+from collections import deque
 
 def solve(input):
     grid = [list(line) for line in input.splitlines()]
@@ -13,26 +14,18 @@ def solve(input):
     yield time
 
 def find_path(grid, start, end, start_time = 0):
-    cycle_time = lcm(len(grid) - 2, len(grid[0]) - 2)
-    best_time = {}
-    best_time[(start, start_time % cycle_time)] = start_time
-    queue = []
-    heappush(queue, (start_time + estimate(start, end), start_time, start))
-    while queue:
-        _, time, pos = heappop(queue)
-        if pos == end:
-            return time
-        else:
-            new_time = time + 1
+    curr = set([start])
+    time = start_time
+    while curr:
+        next = set()
+        for pos in curr:
+            if pos == end:
+                return time
             for new_pos in neighbours(grid, pos):
-                if not collision(grid, new_pos, new_time):
-                    key = (new_pos, new_time % cycle_time)
-                    if new_time < best_time.get(key, inf):
-                        best_time[key] = new_time
-                        heappush(queue, (new_time + estimate(new_pos, end), new_time, new_pos))
-
-def estimate(pos, end):
-    return abs(end[0] - pos[0]) + abs(end[1] - pos[1])
+                if new_pos not in next and not collision(grid, new_pos, time + 1):
+                    next.add(new_pos)
+        curr = next
+        time += 1
 
 def collision(grid, pos, time):
     x, y = pos
