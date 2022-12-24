@@ -1,6 +1,6 @@
 import framework
 from math import *
-from collections import deque
+from heapq import *
 
 def solve(input):
     width, height, blizzards = parse_grid(input)
@@ -38,21 +38,25 @@ def find_path(width, height, blizzards, start, end, time = 0):
     time += 1
     while start in blizzards[time % len(blizzards)]:
         time += 1
-    queue = deque()
-    seen = set()
-    queue.append((start, time))
-    seen.add((start, time % len(blizzards)))
+    best_time = {}
+    best_time[(start, time % len(blizzards))] = time
+    queue = []
+    heappush(queue, (time + estimate(start, end), time, start))
     while queue:
-        pos, time = queue.popleft()
+        _, time, pos = heappop(queue)
         if pos == end:
             # add extra minute to exit the maze
             return time + 1
         else:
-            i = (time + 1) % len(blizzards)
+            new_time = time + 1
+            i = new_time % len(blizzards)
             for new_pos in neighbours(pos, width, height):
-                if new_pos not in blizzards[i] and (new_pos, i) not in seen:
-                    seen.add((new_pos, i))
-                    queue.append((new_pos, time + 1))
+                if new_pos not in blizzards[i] and new_time < best_time.get((new_pos, i), inf):
+                    best_time[(new_pos, i)] = new_time
+                    heappush(queue, (new_time + estimate(new_pos, end), new_time, new_pos))
+
+def estimate(pos, end):
+    return abs(end[0] - pos[0]) + abs(end[1] - pos[1])
 
 def neighbours(pos, width, height):
     x, y = pos
@@ -67,12 +71,4 @@ def neighbours(pos, width, height):
         yield x, y + 1
 
 if __name__ == '__main__':
-    example = '''\
-#.######
-#>>.<^<#
-#.<..<<#
-#>v.><>#
-#<^v^^>#
-######.#
-'''
     framework.main()
