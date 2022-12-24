@@ -1,5 +1,4 @@
 import framework
-from itertools import pairwise
 
 def solve(input):
     walls = parse_walls(input)
@@ -11,12 +10,16 @@ def solve(input):
 def parse_walls(input):
     walls = set()
     for line in input.splitlines():
-        coords = [tuple(int(s) for s in coords.split(',')) for coords in line.split('->')]
-        for (x0, y0), (x1, y1) in pairwise(coords):
+        coords = [parse_coord(s) for s in line.split('->')]
+        for i in range(len(coords) - 1):
+            (x0, y0), (x1, y1) = coords[i : i + 2]
             for y in range(min(y0, y1), max(y0, y1) + 1):
                 for x in range(min(x0, x1), max(x0, x1) + 1):
                     walls.add((x, y))
     return walls
+
+def parse_coord(s):
+    return tuple(map(int, s.split(',')))
 
 def fill(walls, start_x, start_y, floor_y, max_y):
     sand = set()

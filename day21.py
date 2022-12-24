@@ -16,7 +16,7 @@ operators = {
 
 Const = namedtuple('Const', ['value'])
 Expr = namedtuple('Expr', ['left', 'op', 'right'])
-Monkey = Expr | Const
+#Monkey = Expr | Const
 
 def solve(input):
     monkeys = parse_monkeys(input)
@@ -37,18 +37,17 @@ def parse_monkeys(input):
 def reverse(monkeys):
     parent_names = {}
     for name, monkey in monkeys.items():
-        match monkey:
-            case Expr(left, _, right):
-                parent_names[left] = name
-                parent_names[right] = name
+        if isinstance(monkey, Expr):
+            parent_names[monkey.left] = name
+            parent_names[monkey.right] = name
     return parent_names
 
 def speak(name, monkeys):
-    match monkeys[name]:
-        case Const(value):
-            return value
-        case Expr(left, op, right):
-            return op.apply(speak(left, monkeys), speak(right, monkeys))
+    monkey = monkeys[name]
+    if isinstance(monkey, Const):
+        return monkey.value
+    elif isinstance(monkey, Expr):
+        return monkey.op.apply(speak(monkey.left, monkeys), speak(monkey.right, monkeys))
 
 def should_say(name, monkeys, parent_names):
     parent_name = parent_names[name]
