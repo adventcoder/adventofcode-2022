@@ -90,23 +90,64 @@ def find_edges1(grid):
     return edges
 
 def find_edges2(grid):
-    # TODO: not hardcode this
-    return {
-        (1, 0, L): (0, 2, R),
-        (1, 0, U): (0, 3, R),
-        (2, 0, R): (1, 2, L),
-        (2, 0, D): (1, 1, L),
-        (2, 0, U): (0, 3, U),
-        (1, 1, R): (2, 0, U),
-        (1, 1, L): (0, 2, D),
-        (0, 2, L): (1, 0, R),
-        (0, 2, U): (1, 1, R),
-        (1, 2, R): (2, 0, L),
-        (1, 2, D): (0, 3, L),
-        (0, 3, R): (1, 2, U),
-        (0, 3, D): (2, 0, D),
-        (0, 3, L): (1, 0, D)
-    }
+    net = set()
+    y_tiles = len(grid) // tile_size
+    for y in range(y_tiles):
+        x_tiles = len(grid[y * tile_size]) // tile_size
+        for x in range(x_tiles):
+            if grid[y * tile_size][x * tile_size] != ' ':
+                net.add((x, y))
+
+    faces = {}
+    edges = {}
+
+    def traverse(cube_pos, cube_dir, net_pos):
+        if cube_pos not in faces:
+            faces[cube_pos] = (net_pos, cube_dir)
+            for d, facing in enumerate(facings):
+                new_cube_pos, new_cube_dir = cube_translate(cube_pos, cube_dir, d)
+                new_net_pos = (net_pos[0] + facing[0], net_pos[1] + facing[1])
+                if new_net_pos in net:
+                    # tiles are connected in the net
+                    traverse(new_cube_pos, new_cube_dir, new_net_pos)
+                elif new_cube_pos in faces:
+                    # tiles weren't connected in the net, but they are on the cube, so we can add an edge
+                    new_net_pos, new_cube_dir = faces[new_cube_pos]
+                    d_inv = inverse_cube_translate(cube_pos, new_cube_pos, new_cube_dir)
+                    edges[(*net_pos, d)] = (*new_net_pos, reverse_dir(d_inv))
+                    edges[(*new_net_pos, d_inv)] = (*net_pos, reverse_dir(d))
+    traverse((0, 1, 0), (1, 0, 0), next(iter(net)))
+
+    return edges
+
+def cube_translate(pos, dir, d):
+    if d == R:
+        return dir, negate(pos)
+    elif d == D:
+        return cross(dir, pos), dir
+    elif d == L:
+        return negate(dir), pos
+    elif d == U:
+        return cross(pos, dir), dir
+
+def inverse_cube_translate(pos, old_pos, old_dir):
+    if old_dir == pos:
+        return R
+    elif cross(old_dir, old_pos) == pos:
+        return D
+    elif negate(old_dir) == pos:
+        return L
+    elif cross(old_pos, old_dir) == pos:
+        return U
+
+def cross(a, b):
+    return a[1]*b[2] - a[2]*b[1], a[2]*b[0] - a[0]*b[2], a[0]*b[1] - a[1]*b[0]
+
+def negate(xs):
+    return tuple(-x for x in xs)
+
+def reverse_dir(d):
+    return (d + 2) % len(facings)
 
 if __name__ == '__main__':
     framework.main()
