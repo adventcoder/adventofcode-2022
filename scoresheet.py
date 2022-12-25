@@ -23,7 +23,7 @@ def scoresheet(args):
         mod, input, answers = puzzles[day]
         print("Day {}: ".format(str(day).rjust(2)), end = '', flush = True)
         stars, time = test(mod.solve, input, answers)
-        if day == 25 and stars == len(answers):
+        if day == 25:
             print('*', end = '')
             stars += 1
         print(" {}/{} [{}]".format(stars, len(answers) + (day == 25), format_time(time)))
