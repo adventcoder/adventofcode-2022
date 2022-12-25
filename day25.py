@@ -1,5 +1,4 @@
 import framework
-import re
 
 def solve(input):
     yield format_snafu(sum(map(parse_snafu, input.splitlines())))
