@@ -33,7 +33,7 @@ def get_inputs(args):
     if args.wait:
         for day in range(last_day + 1, 25 + 1):
             wait_for_input(day)
-            get_input(day)
+            get_input(day, args)
 
 def make_inputs_dir():
     if not os.path.exists(dirname):
